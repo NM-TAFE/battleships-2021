@@ -1,0 +1,49 @@
+syntax = "proto3"
+
+package battleships;
+
+service Battleships {
+    rpc Game(stream Request) return (stream Response) {}
+}
+
+message Request {
+    message Player {
+        string id = 1;
+    }
+
+    oneof event {
+        Player join = 1;
+        Attack move = 2;
+        Status report = 3;
+    }
+}
+
+message Response {
+    enum State {
+        BEGIN = 0;
+        START_TURN = 1;
+        STOP_TURN = 2;
+        WIN = 3;
+        LOSE = 4;
+    }
+
+    oneof event {
+        State turn = 1;
+        Attack move = 2;
+        Status report = 3;
+    }
+}
+
+message Attack {
+    string vector = 1;
+}
+
+message Status {
+    enum State {
+        MISS = 0;
+        HIT = 1;
+        DEFEAT = 2;
+    }
+
+    State report = 1;
+}
