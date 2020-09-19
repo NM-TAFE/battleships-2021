@@ -43,6 +43,14 @@ class Battleship(battleships_pb2_grpc.BattleshipsServicer):
             logger.error('Player message does not contain valid ID')
             return
 
+        logger.info(f'Player {player_id} is attempting to join')
+
+        game, is_new = self.find_game()
+
+        logger.info(f'Connecting to game {game.id}. New? {is_new}')
+        logger.info('Set up server to start receiving PubSub messages')
+
+
     @backoff.on_exception(backoff.expo, redis.exceptions.ConnectionError)
     def __ping_redis(self):
         """Ping Redis instance to see if it's alive.
@@ -75,3 +83,49 @@ class Battleship(battleships_pb2_grpc.BattleshipsServicer):
         """Close the connection the Redis instance.
         """
         self.__r.close()
+
+    def connect_game(self, game, player, is_new):
+        """Join an existing game or advertise this one as open if game
+        is not yet in progress.
+
+        :param game: Game
+        :param player: Player
+        :param is_new: True if game is new, False otherwise
+        """
+        pass
+
+    def find_game(self):
+        """Try to find an open game in Redis or create a new game if
+        none found.
+
+        :return: A tuple containing a Game object and a flag is_new
+        which indicates that a new game was created.
+        """
+        b_game_id = self.__r.rpop(self.OpenGames)
+
+        # b_game_id is None if no open game found
+        is_new = b_game_id is None
+        if is_new:
+            logger.info('Could not find open game, creating new one')
+            game_id = str(uuid.uuid4())
+        else:
+            game_id = b_game_id.decode('utf-8')
+
+        return Game(game_id), is_new
+
+    def add_open_game(self, game):
+        """Add an open game to the Redis instance so it can be discovered.
+
+        :param game: Game to be advertised
+        """
+        logger.info(f'Adding open game {game.id}')
+        return self.__r.lpush(self.OpenGames, game.id)
+
+    def close_open_game(self, game):
+        """Remove an open game from the Redis instance so it can no longer
+        be discovered.
+
+        :param game: Game to be closed
+        """
+        logger.info(f'Closing open game {game.id}')
+        return self.__r.lrem(self.OpenGames, 1, game.id)
