@@ -7,21 +7,24 @@ class TestMessage(unittest.TestCase):
         self.typ = Message.BEGIN
         self.player = "Player McPlayerface"
         self.data = "Some data"
+        self.msg = Message(self.typ, self.player, self.data)
 
     def test_create_message(self):
-        m = Message(self.typ, self.player, self.data)
-        self.assertEqual(m.typ, self.typ)
-        self.assertEqual(m.player, self.player)
-        self.assertEqual(m.data, self.data)
+        self.assertEqual(self.msg.typ, self.typ)
+        self.assertEqual(self.msg.player, self.player)
+        self.assertEqual(self.msg.data, self.data)
 
     def test_json_encode_message(self):
-        m = Message(self.typ, self.player, self.data)
-        j = m.dumps()
+        j = self.msg.dumps()
         self.assertEqual(j, '{"typ": "begin", "player": "Player McPlayerface"'
                             ', "data": "Some data"}')
 
     def test_decode_json_encoded_message(self):
-        m = Message(self.typ, self.player, self.data)
-        j = m.dumps()
-        x = Message.recreate(j)
-        self.assertEqual(m, x)
+        x = Message.recreate(self.msg.dumps())
+
+        # We check that the original message and the recreated one are equal
+        self.assertEqual(self.msg, x)
+
+        # We check that the recreated message is not the same instance as
+        # the original message
+        self.assertIsNot(self.msg, x)
