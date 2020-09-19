@@ -12,8 +12,16 @@ class Game:
 
     @property
     def id(self):
+        """Game ID.
+
+        :return: Game ID
+        """
         return self.__id
 
     @property
     def my_turn(self):
+        """Is it my turn?
+
+        :return: True if it is my turn, False otherwise
+        """
         return self.__my_turn
