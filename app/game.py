@@ -5,8 +5,8 @@ logger = log.get_logger(__name__)
 
 
 class Game:
-    def __init__(self, id=None):
-        self.__id = id
+    def __init__(self, _id):
+        self.__id = _id
         self.__my_turn = False
         self.__lock = Lock()
 
