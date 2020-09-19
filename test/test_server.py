@@ -2,7 +2,6 @@ import unittest
 import app.server
 
 REDIS_HOST = '192.168.20.50'
-REDIS_PORT = '6379'
 
 
 class TestServer(unittest.TestCase):
@@ -13,6 +12,5 @@ class TestServer(unittest.TestCase):
         Please note that this test only works if a Redis host is
         available (see REDIS_HOST above).
         """
-        battleship = app.server.Battleship(REDIS_HOST, REDIS_PORT)
-
-        self.assertTrue(battleship.ping_redis())
+        with app.server.Battleship(REDIS_HOST, db=1) as battleship:
+            self.assertTrue(battleship.ping_redis())

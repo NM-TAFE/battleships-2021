@@ -1,19 +1,36 @@
 import backoff
 import redis
+import uuid
 import log
 import battleships_pb2_grpc
+from game import Game
 
 logger = log.get_logger(__name__)
 
 
 class Battleship(battleships_pb2_grpc.BattleshipsServicer):
-    def __init__(self, redis_host, redis_port):
+    OpenGames = 'openGames'
+
+    def __init__(self, redis_host, redis_port='6379', db=0):
         """Create a Battleship (server) instance.
 
         :param redis_host: Hostname of Redis instance
         :param redis_port: Port of Redis instance
+        :param db: Database to use within Redis instance
         """
-        self.__r = redis.Redis(host=redis_host, port=redis_port)
+        self.__r = redis.Redis(host=redis_host, port=redis_port, db=db)
+
+    def __enter__(self):
+        """Entry point for the context manager.
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit point for the context manager.
+
+        Closes any open connections.
+        """
+        self.close()
 
     def Game(self, request_iterator, context):
         """This method is the implementation of the gRPC Game service.
