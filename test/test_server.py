@@ -21,7 +21,7 @@ class TestServer(unittest.TestCase):
         Redis instance.
         """
         with app.server.Battleship(REDIS_HOST, db=1) as battleship:
-            con = battleship.redis
+            con = battleship.redis_conn
             con.flushdb()
 
             result = con.get(battleship.OpenGames)

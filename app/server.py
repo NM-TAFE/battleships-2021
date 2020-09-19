@@ -74,7 +74,7 @@ class Battleship(battleships_pb2_grpc.BattleshipsServicer):
             return False
 
     @property
-    def redis(self):
+    def redis_conn(self):
         """Return Redis client as a property.
         """
         return self.__r
