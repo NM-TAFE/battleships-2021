@@ -47,9 +47,9 @@ class Battleship(battleships_pb2_grpc.BattleshipsServicer):
 
         game, is_new = self.find_game()
 
-        logger.info(f'Connecting to game {game.id}. New? {is_new}')
-        logger.info('Set up server to start receiving PubSub messages')
-
+        logger.info(f'Connecting to game {game.id}. '
+                    f'New? {"Yes" if is_new else "No"}')
+        logger.info('Setting up server to start receiving PubSub messages')
 
     @backoff.on_exception(backoff.expo, redis.exceptions.ConnectionError)
     def __ping_redis(self):
