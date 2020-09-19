@@ -38,12 +38,6 @@ class Battleship(battleships_pb2_grpc.BattleshipsServicer):
         """
         return self.__r.ping()
 
-    @property
-    def redis(self):
-        """Return Redis client as a property.
-        """
-        return self.__r
-
     def ping_redis(self):
         """Ping a Redis instance.
 
@@ -53,6 +47,12 @@ class Battleship(battleships_pb2_grpc.BattleshipsServicer):
             return self.__ping_redis()
         except redis.exceptions.ConnectionError:
             return False
+
+    @property
+    def redis(self):
+        """Return Redis client as a property.
+        """
+        return self.__r
 
     def close(self):
         """Close the connection the Redis instance.
