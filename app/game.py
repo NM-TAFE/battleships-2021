@@ -12,7 +12,7 @@ class Game:
 
     @property
     def id(self):
-        """Game ID.
+        """Get the game's ID.
 
         :return: Game ID
         """
