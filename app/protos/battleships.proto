@@ -45,5 +45,5 @@ message Status {
         DEFEAT = 2;
     }
 
-    State report = 1;
+    State state = 1;
 }

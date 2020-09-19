@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x11\x62\x61ttleships.proto\x12\x0b\x62\x61ttleships\"\xa1\x01\n\x07Request\x12+\n\x04join\x18\x01 \x01(\x0b\x32\x1b.battleships.Request.PlayerH\x00\x12#\n\x04move\x18\x02 \x01(\x0b\x32\x13.battleships.AttackH\x00\x12%\n\x06report\x18\x03 \x01(\x0b\x32\x13.battleships.StatusH\x00\x1a\x14\n\x06Player\x12\n\n\x02id\x18\x01 \x01(\tB\x07\n\x05\x65vent\"\xd2\x01\n\x08Response\x12+\n\x04turn\x18\x01 \x01(\x0e\x32\x1b.battleships.Response.StateH\x00\x12#\n\x04move\x18\x02 \x01(\x0b\x32\x13.battleships.AttackH\x00\x12%\n\x06report\x18\x03 \x01(\x0b\x32\x13.battleships.StatusH\x00\"D\n\x05State\x12\t\n\x05\x42\x45GIN\x10\x00\x12\x0e\n\nSTART_TURN\x10\x01\x12\r\n\tSTOP_TURN\x10\x02\x12\x07\n\x03WIN\x10\x03\x12\x08\n\x04LOSE\x10\x04\x42\x07\n\x05\x65vent\"\x18\n\x06\x41ttack\x12\x0e\n\x06vector\x18\x01 \x01(\t\"[\n\x06Status\x12)\n\x06report\x18\x01 \x01(\x0e\x32\x19.battleships.Status.State\"&\n\x05State\x12\x08\n\x04MISS\x10\x00\x12\x07\n\x03HIT\x10\x01\x12\n\n\x06\x44\x45\x46\x45\x41T\x10\x02\x32H\n\x0b\x42\x61ttleships\x12\x39\n\x04Game\x12\x14.battleships.Request\x1a\x15.battleships.Response\"\x00(\x01\x30\x01\x62\x06proto3'
+  serialized_pb=b'\n\x11\x62\x61ttleships.proto\x12\x0b\x62\x61ttleships\"\xa1\x01\n\x07Request\x12+\n\x04join\x18\x01 \x01(\x0b\x32\x1b.battleships.Request.PlayerH\x00\x12#\n\x04move\x18\x02 \x01(\x0b\x32\x13.battleships.AttackH\x00\x12%\n\x06report\x18\x03 \x01(\x0b\x32\x13.battleships.StatusH\x00\x1a\x14\n\x06Player\x12\n\n\x02id\x18\x01 \x01(\tB\x07\n\x05\x65vent\"\xd2\x01\n\x08Response\x12+\n\x04turn\x18\x01 \x01(\x0e\x32\x1b.battleships.Response.StateH\x00\x12#\n\x04move\x18\x02 \x01(\x0b\x32\x13.battleships.AttackH\x00\x12%\n\x06report\x18\x03 \x01(\x0b\x32\x13.battleships.StatusH\x00\"D\n\x05State\x12\t\n\x05\x42\x45GIN\x10\x00\x12\x0e\n\nSTART_TURN\x10\x01\x12\r\n\tSTOP_TURN\x10\x02\x12\x07\n\x03WIN\x10\x03\x12\x08\n\x04LOSE\x10\x04\x42\x07\n\x05\x65vent\"\x18\n\x06\x41ttack\x12\x0e\n\x06vector\x18\x01 \x01(\t\"Z\n\x06Status\x12(\n\x05state\x18\x01 \x01(\x0e\x32\x19.battleships.Status.State\"&\n\x05State\x12\x08\n\x04MISS\x10\x00\x12\x07\n\x03HIT\x10\x01\x12\n\n\x06\x44\x45\x46\x45\x41T\x10\x02\x32H\n\x0b\x42\x61ttleships\x12\x39\n\x04Game\x12\x14.battleships.Request\x1a\x15.battleships.Response\"\x00(\x01\x30\x01\x62\x06proto3'
 )
 
 
@@ -89,8 +89,8 @@ _STATUS_STATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=490,
-  serialized_end=528,
+  serialized_start=489,
+  serialized_end=527,
 )
 _sym_db.RegisterEnumDescriptor(_STATUS_STATE)
 
@@ -270,7 +270,7 @@ _STATUS = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='report', full_name='battleships.Status.report', index=0,
+      name='state', full_name='battleships.Status.state', index=0,
       number=1, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -290,7 +290,7 @@ _STATUS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=437,
-  serialized_end=528,
+  serialized_end=527,
 )
 
 _REQUEST_PLAYER.containing_type = _REQUEST
@@ -319,7 +319,7 @@ _RESPONSE.fields_by_name['move'].containing_oneof = _RESPONSE.oneofs_by_name['ev
 _RESPONSE.oneofs_by_name['event'].fields.append(
   _RESPONSE.fields_by_name['report'])
 _RESPONSE.fields_by_name['report'].containing_oneof = _RESPONSE.oneofs_by_name['event']
-_STATUS.fields_by_name['report'].enum_type = _STATUS_STATE
+_STATUS.fields_by_name['state'].enum_type = _STATUS_STATE
 _STATUS_STATE.containing_type = _STATUS
 DESCRIPTOR.message_types_by_name['Request'] = _REQUEST
 DESCRIPTOR.message_types_by_name['Response'] = _RESPONSE
@@ -372,8 +372,8 @@ _BATTLESHIPS = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=530,
-  serialized_end=602,
+  serialized_start=529,
+  serialized_end=601,
   methods=[
   _descriptor.MethodDescriptor(
     name='Game',
