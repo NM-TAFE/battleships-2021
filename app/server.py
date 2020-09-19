@@ -1,9 +1,12 @@
 import backoff
+import queue
 import redis
+import threading
 import uuid
 import log
 import battleships_pb2_grpc
 from game import Game
+from message import Message
 
 logger = log.get_logger(__name__)
 
@@ -19,6 +22,8 @@ class Battleship(battleships_pb2_grpc.BattleshipsServicer):
         :param db: Database to use within Redis instance
         """
         self.__r = redis.Redis(host=redis_host, port=redis_port, db=db)
+        self.__q = queue.Queue()
+        self.__e = threading.Event()
 
     def __enter__(self):
         """Entry point for the context manager.
@@ -51,25 +56,54 @@ class Battleship(battleships_pb2_grpc.BattleshipsServicer):
                     f'New? {"Yes" if is_new else "No"}')
         logger.info('Setting up server to start receiving PubSub messages')
 
-    @backoff.on_exception(backoff.expo, redis.exceptions.ConnectionError)
-    def __ping_redis(self):
-        """Ping Redis instance to see if it's alive.
+        pubsub_thread = self.subscribe(game)
 
-        This method may raise the ConnectionError exception if it can't
-        connect to a Redis instance.
+        game_thread = threading.Thread(
+            target=lambda: self.recv(request_iterator))
+        game_thread.daemon = True
+        game_thread.start()
 
-        :return: True if Redis instance reachable, raises ConnectionError
-        otherwise
+        while self.__e.is_set():
+            yield self.__q.get()
+
+        game_thread.join()
+        self.close_open_game(game)
+        if pubsub_thread is not None:
+            pubsub_thread.stop()
+
+    def send(self, response):
+        """Send a gRPC message.
+
+        :param response: Response to send to the client
         """
-        return self.__r.ping()
+        self.__q.put_nowait(response)
+
+    def recv(self, request_iterator):
+        """Receive a gRPC message.
+
+        :param request_iterator: gRPC stream to receive messages from
+        """
+        while self.__e.is_set():
+            received = next(request_iterator)
+
+    def stop(self):
+        """Stop the game from running.
+        """
+        self.__e.clear()
 
     def ping_redis(self):
         """Ping a Redis instance.
 
         :return: True if connection to instance established, False otherwise
         """
+        @backoff.on_exception(backoff.expo, redis.exceptions.ConnectionError)
+        def __ping_redis():
+            """Convenience function that does the actual PING.
+            """
+            return self.__r.ping()
+
         try:
-            return self.__ping_redis()
+            return __ping_redis()
         except redis.exceptions.ConnectionError:
             return False
 
@@ -92,7 +126,38 @@ class Battleship(battleships_pb2_grpc.BattleshipsServicer):
         :param player: Player
         :param is_new: True if game is new, False otherwise
         """
-        pass
+        if is_new:
+            return self.add_open_game(game)
+
+        if not self.ensure_subscribers(game, 2):
+            return False
+
+        msg = Message(Message.BEGIN, player.id, '')
+
+    def subscribe(self, game):
+        """Subscribe to game.id channel but in a separate thread.
+        The handler that is used for the pubsub message is called
+        handle_pubsub, which is a method of this class.
+
+        :param game: Game of which the ID is used to subscribe
+        :return: Thread that the handler is running in
+        """
+        p = self.__r.pubsub(ignore_subscribe_messages=True)
+        p.subscribe(**{game.id: self.handle_pubsub})
+        thread = p.run_in_thread(sleep_time=0.001)
+        return thread
+
+    def handle_pubsub(self, msg):
+        message = Message.recreate(msg)
+
+    def ensure_subscribers(self, game, n):
+        """Ensure that {n} listeners are subscribed to the id of the
+        game passed in as a parameter.
+
+        :param game: Game of which the ID is checked
+        :param n: The number of subscribers we're expecting
+        """
+        return True
 
     def find_game(self):
         """Try to find an open game in Redis or create a new game if
