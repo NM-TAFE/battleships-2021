@@ -33,3 +33,10 @@ class Game:
         """
         with self.__lock:
             self.__my_turn = True
+
+    def end_turn(self):
+        """End turn for this player (as the Game server hosts a Game
+        instance for a single player at a time).
+        """
+        with self.__lock:
+            self.__my_turn = False
