@@ -25,3 +25,10 @@ class Game:
         :return: True if it is my turn, False otherwise
         """
         return self.__my_turn
+
+    def start_turn(self):
+        """Start turn for this player (as the Game server hosts a Game
+        instance for a single player at a time).
+        """
+        with self.__lock:
+            self.__my_turn = True
