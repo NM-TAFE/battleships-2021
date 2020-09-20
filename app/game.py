@@ -24,7 +24,8 @@ class Game:
 
         :return: True if it is my turn, False otherwise
         """
-        return self.__my_turn
+        with self.__lock:
+            return self.__my_turn
 
     def start_turn(self):
         """Start turn for this player (as the Game server hosts a Game
