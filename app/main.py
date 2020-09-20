@@ -22,6 +22,8 @@ def main():
     server = grpc.server(ThreadPoolExecutor(max_workers=10))
     add_BattleshipsServicer_to_server(battleship, server)
 
+    logger.info(f'Starting server on port {serve_port}')
+
     server.add_insecure_port(f'[::]:{serve_port}')
     server.start()
     server.wait_for_termination()

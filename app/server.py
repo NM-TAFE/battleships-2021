@@ -119,7 +119,9 @@ class Battleship(BattleshipsServicer):
 
         :return: True if connection to instance established, False otherwise
         """
-        @backoff.on_exception(backoff.expo, redis.exceptions.ConnectionError)
+        @backoff.on_exception(backoff.expo,
+                              redis.exceptions.ConnectionError,
+                              max_time=60)
         def __ping_redis():
             """Convenience function that does the actual Redis PING.
             """
