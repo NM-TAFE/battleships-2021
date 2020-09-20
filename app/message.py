@@ -8,14 +8,18 @@ class Message:
     Redis using PubSub.
 
     The messages are used to communicate between two Game servers which
-    are in fact playing the same game.
+    are in fact playing the same game. Please note that no validation
+    takes place as to whether the provided {type} is valid even though
+    message types (BEGIN, etc.) are provided for convenience.
     """
-    typ: str
+    type: str
     player: str
     data: str
 
+    # Messages types (no validation is performed)
     BEGIN = 'begin'
     STOP_TURN = 'stop_turn'
+    ATTACK = 'attack'
     STATUS = 'status'
     LOST = 'lost'
 
@@ -26,7 +30,7 @@ class Message:
         :return: JSON encoded string
         """
         return json.dumps({
-            'typ': self.typ,
+            'type': self.type,
             'player': self.player,
             'data': self.data,
         })
@@ -41,7 +45,7 @@ class Message:
         :raise ValueError: if the JSON string cannot be parsed
         """
         d = json.loads(s)
-        if 'typ' not in d or 'player' not in d or 'data' not in d:
+        if 'type' not in d or 'player' not in d or 'data' not in d:
             raise ValueError()
 
-        return Message(d['typ'], d['player'], d['data'])
+        return Message(d['type'], d['player'], d['data'])

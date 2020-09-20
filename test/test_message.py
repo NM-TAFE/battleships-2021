@@ -4,19 +4,19 @@ from app.message import Message
 
 class TestMessage(unittest.TestCase):
     def setUp(self) -> None:
-        self.typ = Message.BEGIN
+        self.type = Message.BEGIN
         self.player = "Player McPlayerface"
         self.data = "Some data"
-        self.msg = Message(self.typ, self.player, self.data)
+        self.msg = Message(self.type, self.player, self.data)
 
     def test_create_message(self):
-        self.assertEqual(self.msg.typ, self.typ)
+        self.assertEqual(self.msg.type, self.type)
         self.assertEqual(self.msg.player, self.player)
         self.assertEqual(self.msg.data, self.data)
 
     def test_json_encode_message(self):
         j = self.msg.dumps()
-        self.assertEqual(j, '{"typ": "begin", "player": "Player McPlayerface"'
+        self.assertEqual(j, '{"type": "begin", "player": "Player McPlayerface"'
                             ', "data": "Some data"}')
 
     def test_decode_json_encoded_message(self):
