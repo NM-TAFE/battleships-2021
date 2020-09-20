@@ -283,7 +283,12 @@ class Battleship(BattleshipsServicer):
         :param game: Game of which the ID is checked
         :param n: The number of subscribers we're expecting
         """
-        return True
+        values = self.__r.pubsub_numsub(game.id)
+        if len(values) < 1:
+            return False
+
+        _, nsub = values[0]
+        return n == nsub
 
     def connect_game(self, game, player_id, is_new):
         """Join an existing game or advertise this one as open if game
