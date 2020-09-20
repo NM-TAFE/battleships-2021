@@ -13,3 +13,6 @@ class TestGame(unittest.TestCase):
 
         game.start_turn()
         self.assertTrue(game.my_turn)
+
+        game.end_turn()
+        self.assertFalse(game.my_turn)
