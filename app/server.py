@@ -1,7 +1,9 @@
 import backoff
+import logging
 import queue
 import redis
 import threading
+import time
 import uuid
 import log
 from battleships_pb2 import Attack, Response, Status
@@ -10,6 +12,7 @@ from game import Game
 from message import Message
 
 logger = log.get_logger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class Battleship(BattleshipsServicer):
@@ -95,7 +98,7 @@ class Battleship(BattleshipsServicer):
             return False
 
         msg = Message(Message.BEGIN, player_id, '')
-        self.publish(game, msg)
+        self.publish(game.id, msg)
         return True
 
     def recv(self):
@@ -234,6 +237,8 @@ class Battleship(BattleshipsServicer):
                 return self.handle_pubsub(msg, game, player_id)
             return handle_pubsub
 
+        logger.info(f'Subscribing to channel {game.id}')
+
         p = self.__r.pubsub(ignore_subscribe_messages=True)
         p.subscribe(**{game.id: get_pubsub_handler()})
         thread = p.run_in_thread(sleep_time=0.001)
@@ -245,7 +250,7 @@ class Battleship(BattleshipsServicer):
         :param game: Game for which to handle messages
         :param player_id: Player for which we're receiving messages
         """
-        message = Message.recreate(msg)
+        message = Message.recreate(msg['data'])
         message_type = message.type
         if message_type == Message.BEGIN:
             response = Response(turn=Response.State.BEGIN)
@@ -303,12 +308,19 @@ class Battleship(BattleshipsServicer):
         :param game: Game of which the ID is checked
         :param n: The number of subscribers we're expecting
         """
-        values = self.__r.pubsub_numsub(game.id)
-        if len(values) < 1:
-            return False
+        for x in range(5):
+            values = self.__r.pubsub_numsub(game.id)
+            if len(values) < 1:
+                return False
 
-        _, nsub = values[0]
-        return n == nsub
+            _, nsub = values[0]
+            if n == nsub:
+                return True
+
+            time.sleep(0.1)
+
+        logger.error(f'Timeout trying to ensure {n} subscribers')
+        return False
 
     def find_game_or_create(self):
         """Try to find an open game in Redis or create a new game if
