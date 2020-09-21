@@ -50,13 +50,13 @@ class TestServer(unittest.TestCase):
             con = battleship.redis_conn
             con.flushdb()
 
-            game, is_new = battleship.find_game()
+            game, is_new = battleship.find_game_or_create()
             self.assertTrue(is_new)
 
             game = app.game.Game('new game')
             result = battleship.add_open_game(game)
             self.assertTrue(result)
 
-            found_game, is_new = battleship.find_game()
+            found_game, is_new = battleship.find_game_or_create()
             self.assertFalse(is_new)
             self.assertEqual(game.id, found_game.id)

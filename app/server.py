@@ -60,7 +60,7 @@ class Battleship(BattleshipsServicer):
 
         logger.info(f'Player {player_id} is attempting to join')
 
-        game, is_new = self.find_game()
+        game, is_new = self.find_game_or_create()
 
         logger.info(f'Connecting to game {game.id}. '
                     f'New? {"Yes" if is_new else "No"}')
@@ -310,7 +310,7 @@ class Battleship(BattleshipsServicer):
         _, nsub = values[0]
         return n == nsub
 
-    def find_game(self):
+    def find_game_or_create(self):
         """Try to find an open game in Redis or create a new game if
         none found.
 
