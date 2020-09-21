@@ -200,7 +200,7 @@ class Battleship(BattleshipsServicer):
         :param channel: Channel to use
         :param message: Message to publish
         """
-        self.__r.publish(channel, message)
+        self.__r.publish(channel, message.dumps())
 
     def subscribe_redis(self, game, player_id):
         """Subscribe to game.id channel but in a separate thread.
