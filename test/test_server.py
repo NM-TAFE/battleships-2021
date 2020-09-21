@@ -2,7 +2,7 @@ import unittest
 import app.game
 import app.server
 
-REDIS_HOST = '192.168.20.50'
+REDIS_HOST = 'localhost'
 
 
 class TestServer(unittest.TestCase):
