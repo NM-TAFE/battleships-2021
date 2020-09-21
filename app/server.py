@@ -132,30 +132,6 @@ class Battleship(BattleshipsServicer):
         """
         self.__e.clear()
 
-    def ping_redis(self):
-        """Ping a Redis instance.
-
-        :return: True if connection to instance established, False otherwise
-        """
-        @backoff.on_exception(backoff.expo,
-                              redis.exceptions.ConnectionError,
-                              max_time=60)
-        def __ping_redis():
-            """Convenience function that does the actual Redis PING.
-            """
-            return self.__r.ping()
-
-        try:
-            return __ping_redis()
-        except redis.exceptions.ConnectionError:
-            return False
-
-    @property
-    def redis_conn(self):
-        """Return Redis client as a property.
-        """
-        return self.__r
-
     def close(self):
         """Close connections, like the connection to the Redis instance.
         """
@@ -211,6 +187,30 @@ class Battleship(BattleshipsServicer):
 
             else:
                 logger.error('Received an unknown message type!')
+
+    def ping_redis(self):
+        """Ping a Redis instance.
+
+        :return: True if connection to instance established, False otherwise
+        """
+        @backoff.on_exception(backoff.expo,
+                              redis.exceptions.ConnectionError,
+                              max_time=60)
+        def __ping_redis():
+            """Convenience function that does the actual Redis PING.
+            """
+            return self.__r.ping()
+
+        try:
+            return __ping_redis()
+        except redis.exceptions.ConnectionError:
+            return False
+
+    @property
+    def redis_conn(self):
+        """Return Redis client as a property.
+        """
+        return self.__r
 
     def publish(self, channel, message):
         """Publish a message to Redis PubSub on a certain channel.
