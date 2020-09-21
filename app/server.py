@@ -55,7 +55,7 @@ class Battleship(BattleshipsServicer):
 
         player_id = request.join.id
         if player_id == '':
-            logger.error('Player message does not contain valid ID')
+            logger.error('Player message ID is empty')
             return
 
         logger.info(f'Player {player_id} is attempting to join')
