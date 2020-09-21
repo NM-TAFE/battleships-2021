@@ -80,6 +80,24 @@ class Battleship(BattleshipsServicer):
         pubsub_thread.stop()
         self.close_open_game(game)
 
+    def connect_game(self, game, player_id, is_new):
+        """Join an existing game or advertise this one as open if game
+        is not yet in progress.
+
+        :param game: Game
+        :param player_id: ID of player
+        :param is_new: True if game is new, False otherwise
+        """
+        if is_new:
+            return self.add_open_game(game)
+
+        if not self.ensure_subscribers(game, 2):
+            return False
+
+        msg = Message(Message.BEGIN, player_id, '')
+        self.publish(game, msg)
+        return True
+
     def recv(self):
         """Receive a gRPC message.
 
@@ -277,24 +295,6 @@ class Battleship(BattleshipsServicer):
 
             self.send(Response(turn=turn))
             self.stop()
-
-    def connect_game(self, game, player_id, is_new):
-        """Join an existing game or advertise this one as open if game
-        is not yet in progress.
-
-        :param game: Game
-        :param player_id: ID of player
-        :param is_new: True if game is new, False otherwise
-        """
-        if is_new:
-            return self.add_open_game(game)
-
-        if not self.ensure_subscribers(game, 2):
-            return False
-
-        msg = Message(Message.BEGIN, player_id, '')
-        self.publish(game, msg)
-        return True
 
     def ensure_subscribers(self, game, n):
         """Ensure that {n} listeners are subscribed to the id of the
