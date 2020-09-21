@@ -296,6 +296,20 @@ class Battleship(BattleshipsServicer):
         self.publish(game, msg)
         return True
 
+    def ensure_subscribers(self, game, n):
+        """Ensure that {n} listeners are subscribed to the id of the
+        game passed in as a parameter.
+
+        :param game: Game of which the ID is checked
+        :param n: The number of subscribers we're expecting
+        """
+        values = self.__r.pubsub_numsub(game.id)
+        if len(values) < 1:
+            return False
+
+        _, nsub = values[0]
+        return n == nsub
+
     def find_game(self):
         """Try to find an open game in Redis or create a new game if
         none found.
@@ -314,20 +328,6 @@ class Battleship(BattleshipsServicer):
             game_id = b_game_id.decode('utf-8')
 
         return Game(game_id), is_new
-
-    def ensure_subscribers(self, game, n):
-        """Ensure that {n} listeners are subscribed to the id of the
-        game passed in as a parameter.
-
-        :param game: Game of which the ID is checked
-        :param n: The number of subscribers we're expecting
-        """
-        values = self.__r.pubsub_numsub(game.id)
-        if len(values) < 1:
-            return False
-
-        _, nsub = values[0]
-        return n == nsub
 
     def add_open_game(self, game):
         """Add an open game to the Redis instance so it can be discovered.
