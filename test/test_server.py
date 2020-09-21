@@ -6,7 +6,7 @@ REDIS_HOST = '192.168.20.50'
 
 
 class TestServer(unittest.TestCase):
-    """Please note that the tests in this suite only works if a Redis
+    """Please note that the tests in this suite only work if a Redis
     host is available (see REDIS_HOST above).
     """
     def test_redis_connection(self):
