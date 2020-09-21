@@ -76,8 +76,9 @@ class Battleship(BattleshipsServicer):
 
         game_thread = self.subscribe_grpc(game, player_id)
 
-        while self.is_running:
-            yield self.get()
+        yield from self.get()
+
+        logger.info('Stopping all threads')
 
         game_thread.join()
         pubsub_thread.stop()
@@ -106,7 +107,11 @@ class Battleship(BattleshipsServicer):
 
         :return: gRPC message that was received
         """
-        return next(self.__stream)
+        try:
+            return next(self.__stream)
+        except StopIteration:
+            logger.warning('recv() - iteration stopped')
+            self.stop()
 
     def send(self, response):
         """Send a gRPC message.
@@ -116,11 +121,17 @@ class Battleship(BattleshipsServicer):
         self.__q.put_nowait(response)
 
     def get(self):
-        """Get next message from the queue.
+        """Get next message from the queue. It keeps running until it
+        sees that the is_running flag is False, then it returns.
 
         :return: Next message in queue
         """
-        return self.__q.get()
+        while True:
+            try:
+                yield self.__q.get(timeout=1.0)
+            except queue.Empty:
+                if not self.is_running:
+                    return
 
     @property
     def is_running(self):
@@ -165,6 +176,8 @@ class Battleship(BattleshipsServicer):
         """
         while True:
             request = self.recv()
+            if request is None:
+                return
 
             if request.HasField('move'):
                 # It must be my move if we have to handle an Attack
