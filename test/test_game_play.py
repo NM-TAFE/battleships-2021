@@ -3,13 +3,13 @@ import threading
 import time
 import unittest
 from datetime import datetime
-from app.battleships_pb2 import Attack, Request, Response, Status
+from app.battleships_pb2 import Attack, Request, Status
 from app.server import Battleship
 
 REDIS_HOST = '192.168.20.50'
 
 
-def stream(q):
+def stream(q, p):
     while True:
         s = q.get()
         if s is not None:
@@ -27,14 +27,24 @@ def read_incoming(input_stream, s):
             return
 
 
+def attack(vector):
+    return Request(move=Attack(vector=vector))
+
+
+def report(state):
+    return Request(report=Status(state=state))
+
+
 def test_simple_game_play():
+    delay = 0.5
+    
     alice = queue.Queue()
     bob = queue.Queue()
     game_server_1 = Battleship(REDIS_HOST)
     game_server_2 = Battleship(REDIS_HOST)
 
-    input_stream_1 = game_server_1.Game(stream(alice), {})
-    input_stream_2 = game_server_2.Game(stream(bob), {})
+    input_stream_1 = game_server_1.Game(stream(alice, 'Alice'), {})
+    input_stream_2 = game_server_2.Game(stream(bob, 'Bob'), {})
 
     t1 = threading.Thread(
         target=lambda: read_incoming(input_stream_1, 'Alice'))
@@ -48,33 +58,29 @@ def test_simple_game_play():
 
     # Both players join
     alice.put(Request(join=Request.Player(id='Alice')))
-    time.sleep(1.5)
+    time.sleep(delay)
     bob.put(Request(join=Request.Player(id='Bob')))
-    time.sleep(1.5)
+    time.sleep(delay)
 
     # Player 1 gets to start
-    alice.put(Request(move=Attack(vector="a1")))
-    time.sleep(1.5)
-    bob.put(Response(report=Status(state=Status.State.HIT)))
-    time.sleep(1.5)
+    alice.put(attack("a1"))
+    bob.put(report(Status.State.MISS))
+    time.sleep(delay)
 
     # Now it is Player 2's turn
-    bob.put(Request(move=Attack(vector="j10")))
-    time.sleep(1.5)
-    alice.put(Response(report=Status(state=Status.State.MISS)))
-    time.sleep(1.5)
+    bob.put(attack("j10"))
+    alice.put(report(Status.State.HIT))
+    time.sleep(delay)
 
     # Now it is Player 1's turn
-    alice.put(Request(move=Attack(vector="c5")))
-    time.sleep(1.5)
-    bob.put(Response(report=Status(state=Status.State.HIT)))
-    time.sleep(1.5)
+    alice.put(attack("c5"))
+    bob.put(report(Status.State.MISS))
+    time.sleep(delay)
 
     # Now it is Player 2's turn
-    bob.put(Request(move=Attack(vector="e3")))
-    time.sleep(1.5)
-    alice.put(Response(report=Status(state=Status.State.DEFEAT)))
-    time.sleep(1.5)
+    bob.put(attack("e3"))
+    alice.put(report(Status.State.DEFEAT))
+    time.sleep(delay)
 
     alice.put(None)
     bob.put(None)
