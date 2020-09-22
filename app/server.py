@@ -299,7 +299,12 @@ class Battleship(BattleshipsServicer):
                         f'state {state}')
 
             if message.player == player_id:
-                self.send(Response(move=Status(state=message.data)))
+                states = {
+                    '0': Status.State.MISS,
+                    '1': Status.State.HIT,
+                    '2': Status.State.DEFEAT,
+                }
+                self.send(Response(report=Status(state=states[message.data])))
 
                 # Stop this player's turn (this will start other player's turn)
                 message = Message(Message.STOP_TURN, player_id, '')
@@ -307,7 +312,7 @@ class Battleship(BattleshipsServicer):
 
         elif message_type == Message.LOST:
             logger.info(f'Received LOST from player {message.player}')
-            turn = Response.State.LOST
+            turn = Response.State.LOSE
             if message.player == player_id:
                 turn = Response.State.WIN
 
