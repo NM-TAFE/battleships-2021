@@ -158,9 +158,11 @@ class Battleship(BattleshipsServicer):
         :param player_id: Player this game server is handling
         :return: Thread handling the gRPC requests
         """
+
         def get_grpc_handler():
             def handle_grpc():
                 return self.handle_grpc(game, player_id)
+
             return handle_grpc
 
         game_thread = threading.Thread(target=get_grpc_handler())
@@ -186,7 +188,8 @@ class Battleship(BattleshipsServicer):
                     msg = Message(Message.ATTACK, player_id, move)
                     self.publish(game.id, msg)
                 else:
-                    logger.error('Got {move} request but not my turn!')
+                    logger.error('Got {move} request but not my turn! '
+                                 f'Player {player_id}')
 
             elif request.HasField('report'):
                 # It must not be my move if we have to handle a Report
@@ -199,7 +202,8 @@ class Battleship(BattleshipsServicer):
 
                     self.publish(game.id, msg)
                 else:
-                    logger.error('Got {report} request but it is my turn!')
+                    logger.error('Got {response} request but not my turn! '
+                                 f'Player {player_id}')
 
             else:
                 logger.error('Received an unknown message type!')
@@ -209,6 +213,7 @@ class Battleship(BattleshipsServicer):
 
         :return: True if connection to instance established, False otherwise
         """
+
         @backoff.on_exception(backoff.expo,
                               redis.exceptions.ConnectionError,
                               max_time=60)
@@ -245,9 +250,11 @@ class Battleship(BattleshipsServicer):
         :param player_id: ID of player this game server is handling
         :return: Thread that the handler is running in
         """
+
         def get_pubsub_handler():
             def handle_pubsub(msg):
                 return self.handle_pubsub(msg, game, player_id)
+
             return handle_pubsub
 
         logger.info(f'Subscribing to channel {game.id}')
@@ -275,28 +282,32 @@ class Battleship(BattleshipsServicer):
                 self.publish(game.id, message)
 
         elif message_type == Message.STOP_TURN:
-            logger.info(f'Received STOP_TURN from player {message.player}')
+            logger.info(f'({player_id}) - '
+                        f'Received STOP_TURN from player {message.player}')
             if message.player == player_id:
                 game.end_turn()
                 turn = Response.State.STOP_TURN
             else:
-                logger.info(f'Starting turn for player {player_id}')
+                logger.info(f'({player_id}) - '
+                        f'Starting turn for player {player_id}')
                 game.start_turn()
                 turn = Response.State.START_TURN
 
             self.send(Response(turn=turn))
 
         elif message_type == Message.ATTACK:
-            logger.info(f'Received ATTACK from player {message.player} '
-                        f'with vector {message.data}')
+            logger.info(f'({player_id}) - '
+                        f'Received ATTACK from player {message.player} '
+                        f'with vector {message.data}.')
 
             if message.player != player_id:
                 self.send(Response(move=Attack(vector=message.data)))
 
         elif message_type == Message.STATUS:
             state = "HIT" if message.data == Status.State.HIT else "MISS"
-            logger.info(f'Received STATUS from player {message.player} with '
-                        f'state {state}')
+            logger.info(f'({player_id}) - '
+                        f'Received STATUS from player {message.player} with '
+                        f'state {state}.')
 
             if message.player == player_id:
                 states = {
@@ -305,13 +316,15 @@ class Battleship(BattleshipsServicer):
                     '2': Status.State.DEFEAT,
                 }
                 self.send(Response(report=Status(state=states[message.data])))
-
+            else:
                 # Stop this player's turn (this will start other player's turn)
                 message = Message(Message.STOP_TURN, player_id, '')
                 self.publish(game.id, message)
 
         elif message_type == Message.LOST:
-            logger.info(f'Received LOST from player {message.player}')
+            logger.info(f'({player_id}) - '
+                        f'Received LOST from player {message.player}.')
+
             turn = Response.State.LOSE
             if message.player == player_id:
                 turn = Response.State.WIN
