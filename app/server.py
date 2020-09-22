@@ -344,7 +344,7 @@ class Battleship(BattleshipsServicer):
                         f'Received LOST from player {message.player}.')
 
             turn = Response.State.LOSE
-            if message.player == player_id:
+            if message.player != player_id:
                 turn = Response.State.WIN
 
             self.send(Response(turn=turn))
