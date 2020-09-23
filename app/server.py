@@ -126,12 +126,11 @@ class Battleship(BattleshipsServicer):
 
         :return: Next message in queue
         """
-        while True:
+        while self.is_running:
             try:
                 yield self.__q.get(timeout=1.0)
             except queue.Empty:
-                if not self.is_running:
-                    return
+                pass
 
     @property
     def is_running(self):
