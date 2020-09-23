@@ -51,7 +51,11 @@ class Battleship(BattleshipsServicer):
         """
         self.__stream = request_iterator
 
-        request = self.recv()
+        while True:
+            request = self.recv()
+            if request is not None:
+                break
+
         if not request.HasField('join'):
             logger.error('Not a join message!')
             return

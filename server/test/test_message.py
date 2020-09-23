@@ -1,5 +1,5 @@
 import unittest
-from app.message import Message
+from message import Message
 
 
 class TestMessage(unittest.TestCase):

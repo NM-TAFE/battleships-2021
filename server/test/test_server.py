@@ -1,8 +1,8 @@
 import unittest
-import app.game
-import app.server
+from game import Game
+import server
 
-REDIS_HOST = 'localhost'
+REDIS_HOST = '192.168.20.50'
 
 
 class TestServer(unittest.TestCase):
@@ -13,21 +13,21 @@ class TestServer(unittest.TestCase):
         """Test that the Battleship server can correctly find a Redis
         instance.
         """
-        with app.server.Battleship(REDIS_HOST, db=1) as battleship:
+        with server.Battleship(REDIS_HOST, db=1) as battleship:
             self.assertTrue(battleship.ping_redis())
 
     def test_redis_add_open_game(self):
         """Test that the Battleship server can add an open game to the
         Redis instance.
         """
-        with app.server.Battleship(REDIS_HOST, db=1) as battleship:
+        with server.Battleship(REDIS_HOST, db=1) as battleship:
             con = battleship.redis_conn
             con.flushdb()
 
             result = con.get(battleship.OpenGames)
             self.assertIsNone(result)
 
-            game = app.game.Game('New game!')
+            game = Game('New game!')
             result = battleship.add_open_game(game)
             self.assertTrue(result)
 
@@ -46,14 +46,14 @@ class TestServer(unittest.TestCase):
         open game is found and that it can find an open game in Redis
         if one is actually there.
         """
-        with app.server.Battleship(REDIS_HOST, db=1) as battleship:
+        with server.Battleship(REDIS_HOST, db=1) as battleship:
             con = battleship.redis_conn
             con.flushdb()
 
             game, is_new = battleship.find_game_or_create()
             self.assertTrue(is_new)
 
-            game = app.game.Game('new game')
+            game = Game('new game')
             result = battleship.add_open_game(game)
             self.assertTrue(result)
 

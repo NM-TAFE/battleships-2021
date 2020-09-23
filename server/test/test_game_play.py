@@ -3,8 +3,8 @@ import threading
 import time
 import unittest
 from datetime import datetime
-from app.battleships_pb2 import Attack, Request, Status
-from app.server import Battleship
+from battleships_pb2 import Attack, Request, Status
+from server import Battleship
 
 REDIS_HOST = '192.168.20.50'
 
@@ -90,9 +90,9 @@ def test_simple_game_play():
     time.sleep(1)
 
 
-class TestGamePlay(unittest.TestCase):
-    def test_simple_game_play(self):
-        test_simple_game_play()
+# class TestGamePlay(unittest.TestCase):
+#     def test_simple_game_play(self):
+#         test_simple_game_play()
 
 
 if __name__ == '__main__':
