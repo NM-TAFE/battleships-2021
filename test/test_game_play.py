@@ -38,28 +38,31 @@ def report(state):
 def test_simple_game_play():
     delay = 0.5
     
+    player_1 = 'Alice'
+    player_2 = 'Bob'
+    
     alice = queue.Queue()
     bob = queue.Queue()
     game_server_1 = Battleship(REDIS_HOST)
     game_server_2 = Battleship(REDIS_HOST)
 
-    input_stream_1 = game_server_1.Game(stream(alice, 'Alice'), {})
-    input_stream_2 = game_server_2.Game(stream(bob, 'Bob'), {})
+    input_stream_1 = game_server_1.Game(stream(alice, player_1), {})
+    input_stream_2 = game_server_2.Game(stream(bob, player_2), {})
 
     t1 = threading.Thread(
-        target=lambda: read_incoming(input_stream_1, 'Alice'))
+        target=lambda: read_incoming(input_stream_1, player_1))
     t1.daemon = True
     t1.start()
 
     t2 = threading.Thread(
-        target=lambda: read_incoming(input_stream_2, 'Bob'))
+        target=lambda: read_incoming(input_stream_2, player_2))
     t2.daemon = True
     t2.start()
 
     # Both players join
-    alice.put(Request(join=Request.Player(id='Alice')))
+    alice.put(Request(join=Request.Player(id=player_1)))
     time.sleep(delay)
-    bob.put(Request(join=Request.Player(id='Bob')))
+    bob.put(Request(join=Request.Player(id=player_2)))
     time.sleep(delay)
 
     # Player 1 gets to start
