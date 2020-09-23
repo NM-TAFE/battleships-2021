@@ -13,6 +13,7 @@ def stream(q, p):
     while True:
         s = q.get()
         if s is not None:
+            print(f'{datetime.now()} - {p} - Sending -', s, flush=True)
             yield s
         else:
             return
@@ -35,6 +36,12 @@ def report(state):
     return Request(report=Status(state=state))
 
 
+def start_thread(_stream, name):
+    t = threading.Thread(target=lambda: read_incoming(_stream, name))
+    t.daemon = True
+    t.start()
+
+
 def test_simple_game_play():
     delay = 0.5
     
@@ -49,15 +56,8 @@ def test_simple_game_play():
     input_stream_1 = game_server_1.Game(stream(alice, player_1), {})
     input_stream_2 = game_server_2.Game(stream(bob, player_2), {})
 
-    t1 = threading.Thread(
-        target=lambda: read_incoming(input_stream_1, player_1))
-    t1.daemon = True
-    t1.start()
-
-    t2 = threading.Thread(
-        target=lambda: read_incoming(input_stream_2, player_2))
-    t2.daemon = True
-    t2.start()
+    start_thread(input_stream_1, player_1)
+    start_thread(input_stream_2, player_2)
 
     # Both players join
     alice.put(Request(join=Request.Player(id=player_1)))
