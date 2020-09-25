@@ -16,40 +16,81 @@ logger.setLevel(logging.DEBUG)
 
 
 class Battleship(BattleshipsServicer):
-    OpenGames = 'openGames'
-
     def __init__(self, redis_host, redis_port='6379', db=0):
         """Create a Battleship (server) instance.
 
         :param redis_host: Hostname of Redis instance
         :param redis_port: Port of Redis instance
         :param db: Database to use within Redis instance
+        :raise ConnectionError: if connection to Redis fails
         """
         self.__r = redis.Redis(host=redis_host, port=redis_port, db=db)
-        self.__q = queue.Queue()
-        self.__e = threading.Event()
-        self.__e.set()
-
-        self.__stream = None
-
-    def __enter__(self):
-        """Entry point for the context manager.
-        """
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit point for the context manager.
-
-        Closes any open connections.
-        """
-        self.close()
+        if not self.ping_redis():
+            raise ConnectionError('Unable to connect to Redis server!')
+        else:
+            logger.info('Battleship server connected to Redis server.')
 
     def Game(self, request_iterator, context):
         """This method is the implementation of the gRPC Game service.
         When connected, this provides the main functionality of the
         Battleship game.
+
+        :param request_iterator: iterator providing gRPC requests
+        :param context: a gRPC context object
+        :return: A generator providing gRPC responses
+        """
+        server = _Server(self.__r)
+        with server:
+            yield from server.start(request_iterator, context)
+
+    def ping_redis(self):
+        """Ping a Redis instance to see whether it's alive.
+
+        :return: True if connection to instance established, False otherwise
+        """
+
+        @backoff.on_exception(backoff.expo,
+                              redis.exceptions.ConnectionError,
+                              max_time=60)
+        def __ping_redis():
+            """Convenience function that does the actual Redis PING.
+            """
+            logger.info('Pinging Redis server...')
+            return self.__r.ping()
+
+        try:
+            return __ping_redis()
+        except redis.exceptions.ConnectionError:
+            logger.error('Problem pinging Redis. Retry?')
+            return False
+
+
+class _Server:
+    OpenGames = 'openGames'
+
+    def __init__(self, _redis):
+        self.__r = _redis
+        self.__q = queue.Queue()
+        self.__e = threading.Event()
+        self.__e.set()
+
+        self.__stream = None
+        self.__context = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+
+    def start(self, request_iterator, context):
+        """Method that starts the actual server.
+
+        :param request_iterator: iterator that provides message
+        :param context: gRPC context object
         """
         self.__stream = request_iterator
+        self.__context = context
 
         while True:
             request = self.recv()
@@ -86,7 +127,12 @@ class Battleship(BattleshipsServicer):
 
         game_thread.join()
         pubsub_thread.stop()
-        self.close_open_game(game)
+        self.close(game)
+
+    def stop(self):
+        """Stop the game from running.
+        """
+        self.__e.clear()
 
     def connect_game(self, game, player_id, is_new):
         """Join an existing game or advertise this one as open if game
@@ -144,14 +190,12 @@ class Battleship(BattleshipsServicer):
         """
         return self.__e.is_set()
 
-    def stop(self):
-        """Stop the game from running.
-        """
-        self.__e.clear()
-
-    def close(self):
+    def close(self, game):
         """Close connections, like the connection to the Redis instance.
+
+        :param game: game to close
         """
+        self.close_open_game(game)
         self.__r.close()
 
     def subscribe_grpc(self, game, player_id):
@@ -218,25 +262,6 @@ class Battleship(BattleshipsServicer):
 
             else:
                 logger.error('Received an unknown message type!')
-
-    def ping_redis(self):
-        """Ping a Redis instance.
-
-        :return: True if connection to instance established, False otherwise
-        """
-
-        @backoff.on_exception(backoff.expo,
-                              redis.exceptions.ConnectionError,
-                              max_time=60)
-        def __ping_redis():
-            """Convenience function that does the actual Redis PING.
-            """
-            return self.__r.ping()
-
-        try:
-            return __ping_redis()
-        except redis.exceptions.ConnectionError:
-            return False
 
     @property
     def redis_conn(self):

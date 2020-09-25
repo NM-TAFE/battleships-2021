@@ -13,20 +13,19 @@ def main():
     redis_host = os.getenv('REDIS_HOST', 'localhost')
     redis_port = os.getenv('REDIS_PORT', '6379')
 
-    battleship = Battleship(redis_host, redis_port)
-    if not battleship.ping_redis():
-        logger.fatal('Unable to connect to a Redis instance '
-                     f'{redis_host}:{redis_port}')
+    try:
+        battleship = Battleship(redis_host, redis_port)
+        server = grpc.server(ThreadPoolExecutor(max_workers=10))
+        add_BattleshipsServicer_to_server(battleship, server)
+
+        logger.info(f'Starting server on port {serve_port}')
+
+        server.add_insecure_port(f'[::]:{serve_port}')
+        server.start()
+        server.wait_for_termination()
+    except ConnectionError:
+        logger.fatal('Unable to reach Redis server!')
         exit(1)
-
-    server = grpc.server(ThreadPoolExecutor(max_workers=10))
-    add_BattleshipsServicer_to_server(battleship, server)
-
-    logger.info(f'Starting server on port {serve_port}')
-
-    server.add_insecure_port(f'[::]:{serve_port}')
-    server.start()
-    server.wait_for_termination()
 
 
 if __name__ == '__main__':
