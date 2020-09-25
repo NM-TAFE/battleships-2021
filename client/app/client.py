@@ -11,7 +11,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class Battleship:
-
     # The gRPC turn types mapped onto handler method names
     RESPONSES = {
         Response.State.BEGIN: 'begin',
@@ -187,7 +186,6 @@ class Battleship:
 
         :param msg: Message received from the game server
         """
-        print(f'{self.__player_id} - Received {msg}', flush=True)
         which = msg.WhichOneof('event')
         if which == 'turn':
             if msg.turn in self.RESPONSES:
@@ -200,7 +198,7 @@ class Battleship:
 
         elif which == 'report':
             if msg.report.state in self.STATES:
-                self.__exc_callback(self.RESPONSES[msg.report.state])
+                self.__exc_callback(self.STATES[msg.report.state])
             else:
                 logger.error('Report contains unknown state!')
 
