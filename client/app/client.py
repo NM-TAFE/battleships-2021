@@ -42,7 +42,6 @@ class Battleship:
         self.__queue = queue.Queue()
 
         self.__channel = None
-        self.__stub = None
         self.__response_thread = None
 
     def __del__(self):
@@ -104,9 +103,9 @@ class Battleship:
         logger.info(f'New player: {self.__player_id}')
 
         self.__channel = grpc.insecure_channel(f'{self.__host}:{self.__port}')
-        self.__stub = BattleshipsStub(self.__channel)
 
-        responses = self.__stub.Game(self.__stream())
+        stub = BattleshipsStub(self.__channel)
+        responses = stub.Game(self.__stream())
         self.__response_thread = threading.Thread(
             target=lambda: self.__receive_responses(responses))
         self.__response_thread.daemon = True
