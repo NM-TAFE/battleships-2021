@@ -1,10 +1,53 @@
+import grpc
+import logging
+import queue
+import threading
+import uuid
+from battleships_pb2 import Attack, Request, Response, Status
+from battleships_pb2_grpc import BattleshipsStub
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
 class Battleship:
-    __allowed_events = [
-        'begin', 'start_turn', 'end_turn', 'attack', 'hit', 'miss', 'defeat'
+
+    # The gRPC turn types mapped onto handler method names
+    RESPONSES = {
+        Response.State.BEGIN: 'begin',
+        Response.State.START_TURN: 'start_turn',
+        Response.State.STOP_TURN: 'end_turn',
+        Response.State.WIN: 'win',
+        Response.State.LOSE: 'lose',
+    }
+
+    # The gRPC states mapped onto handler method names
+    STATES = {
+        Status.State.MISS: 'miss',
+        Status.State.HIT: 'hit',
+    }
+
+    __supported_events = [
+        'begin', 'start_turn', 'end_turn', 'attack',
+        'hit', 'miss', 'win', 'lose'
     ]
 
-    def __init__(self):
-        self.handlers = {}
+    def __init__(self, grpc_host='localhost', grpc_port='50051'):
+        self.__handlers = {}
+
+        self.__host = grpc_host
+        self.__port = grpc_port
+
+        self.__player_id = ''
+        self.__queue = queue.Queue()
+
+        self.__channel = None
+        self.__stub = None
+        self.__response_thread = None
+
+    def __del__(self):
+        if self.__channel is not None:
+            self.__channel.close()
 
     def on(self, event=None):
         """A decorator that is used to register an event handler for a
@@ -24,8 +67,8 @@ class Battleship:
                       def attack(vector):
                           pass
 
-        Handlers that are supported are `attack`, `report`, `hit`,
-        `miss`, `defeat`, `start_turn`, `stop_turn`.
+        Handlers that are supported are `begin`, `start_turn`,
+        `end_turn`, `attack`, `hit`, `miss`, `defeat`.
         """
 
         def decorator(f):
@@ -44,11 +87,39 @@ class Battleship:
         if event is None:
             event = handler.__name__
 
-        if event not in self.__allowed_events:
+        if event not in self.__supported_events:
             raise ValueError(f'Unable to register event {event}!')
 
-        print(f'Registering {handler.__name__} for event "{event}"')
-        self.handlers[event] = handler
+        logger.info(f'Registering {handler.__name__} for event "{event}"')
+
+        self.__handlers[event] = handler
+
+    def join(self):
+        """This method sets up the client for sending and receiving gRPC
+        messages to the server. It then sends a join message to the game
+        server to indicate we are ready to play a new game.
+        """
+        self.__player_id = str(uuid.uuid4())
+
+        logger.info(f'New player: {self.__player_id}')
+
+        self.__channel = grpc.insecure_channel(f'{self.__host}:{self.__port}')
+        self.__stub = BattleshipsStub(self.__channel)
+
+        responses = self.__stub.Game(self.__stream())
+        self.__response_thread = threading.Thread(
+            target=lambda: self.__receive_responses(responses))
+        self.__response_thread.daemon = True
+        self.__response_thread.start()
+
+        # Everything's set up, so we can now join a game
+        self.__send(Request(join=Request.Player(id=self.__player_id)))
+
+    def __send(self, msg):
+        """Convience method that places a message in the queue for
+        transmission to the game server.
+        """
+        self.__queue.put(msg)
 
     def attack(self, vector):
         """This method sends an Attack message with the associated vector
@@ -57,25 +128,93 @@ class Battleship:
         the caller to determine what the vector should look like.
 
         :param vector: Vector to send to game server, e.g., "G4"
+        :raise ValueError: if vector is None or not a string
         """
         if vector is None or type(vector) is not str:
             raise ValueError('Parameter vector must be a string!')
+
+        self.__send(Request(move=Attack(vector=vector)))
 
     def hit(self):
         """This method indicates to the game server that the received
         attack was a HIT. Oh no!
         """
-        pass
+        self.__send(Request(report=Status(state=Status.State.HIT)))
 
     def miss(self):
         """This method indicates to the game server that the received
         attack was a MISS. Phew!
         """
-        pass
+        self.__send(Request(report=Status(state=Status.State.MISS)))
 
     def defeat(self):
         """This method indicates to the game serve that the received
         attack was a HIT, which sunk the last of the remaining ships.
         In other words: Game Over. Too bad.
         """
-        pass
+        self.__send(Request(report=Status(state=Status.State.DEFEAT)))
+
+    def __stream(self):
+        """Return a generator of outgoing gRPC messages.
+
+        :return: a gRPC message generator
+        """
+        while True:
+            s = self.__queue.get()
+            if s is not None:
+                logger.info(f'{self.__player_id} - Sending {s}')
+                yield s
+            else:
+                return
+
+    def __receive_responses(self, in_stream):
+        """Receive response from the gRPC in-channel.
+
+        :param in_stream: input channel to handle
+        """
+        while True:
+            try:
+                response = next(in_stream)
+
+                logger.info(f'{self.__player_id} - Received {response}')
+
+                self.__handle_response(response)
+            except StopIteration:
+                return
+
+    def __handle_response(self, msg):
+        """This method handles the actual response coming from the game
+        server.
+
+        :param msg: Message received from the game server
+        """
+        print(f'{self.__player_id} - Received {msg}', flush=True)
+        which = msg.WhichOneof('event')
+        if which == 'turn':
+            if msg.turn in self.RESPONSES:
+                self.__exc_callback(self.RESPONSES[msg.turn])
+            else:
+                logger.error('Response contains unknown state!')
+
+        elif which == 'move':
+            self.__exc_callback('attack', msg.move.vector)
+
+        elif which == 'report':
+            if msg.report.state in self.STATES:
+                self.__exc_callback(self.RESPONSES[msg.report.state])
+            else:
+                logger.error('Report contains unknown state!')
+
+        else:
+            logger.error('Got unknown response type!')
+
+    def __exc_callback(self, *args):
+        """Convenience method that calls the appropriate callback
+        function if it has been registered.
+        """
+        cmd = args[0]
+        if cmd in self.__handlers:
+            if len(args) == 1:
+                self.__handlers[cmd]()
+            else:
+                self.__handlers[cmd](args[1:])
