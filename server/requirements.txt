@@ -1,0 +1,4 @@
+backoff==1.10.0
+grpcio==1.32.0
+protobuf==3.13.0
+redis==3.5.3
