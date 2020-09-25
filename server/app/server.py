@@ -1,4 +1,5 @@
 import backoff
+import grpc
 import logging
 import queue
 import redis
@@ -127,7 +128,7 @@ class _Server:
 
         game_thread.join()
         pubsub_thread.stop()
-        self.close(game)
+        self.close_open_game(game)
 
     def stop(self):
         """Stop the game from running.
@@ -159,6 +160,9 @@ class _Server:
         """
         try:
             return next(self.__stream)
+        except grpc.RpcError:
+            logger.error('An RPC error occurred!')
+            self.stop()
         except StopIteration:
             logger.warning('recv() - iteration stopped')
             self.stop()
@@ -178,7 +182,7 @@ class _Server:
         """
         while self.is_running:
             try:
-                yield self.__q.get(timeout=1.0)
+                yield self.__q.get(timeout=0.5)
             except queue.Empty:
                 pass
 
@@ -190,12 +194,9 @@ class _Server:
         """
         return self.__e.is_set()
 
-    def close(self, game):
+    def close(self):
         """Close connections, like the connection to the Redis instance.
-
-        :param game: game to close
         """
-        self.close_open_game(game)
         self.__r.close()
 
     def subscribe_grpc(self, game, player_id):
