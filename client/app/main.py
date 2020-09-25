@@ -1,9 +1,13 @@
 import os
+import threading
 import time
 from client import Battleship
 
 grpc_host = os.getenv('GRPC_HOST', 'localhost')
 grpc_port = os.getenv('GRPC_PORT', '50051')
+
+playing = threading.Event()
+playing.set()
 
 battleship = Battleship(grpc_host=grpc_host, grpc_port=grpc_port)
 
@@ -30,6 +34,18 @@ def miss():
 
 
 @battleship.on()
+def win():
+    print('Yay! You won!')
+    playing.clear()
+
+
+@battleship.on()
+def lose():
+    print('Aww... You lost...')
+    playing.clear()
+
+
+@battleship.on()
 def attack(vector):
     vector = vector[0]
     print(f'Shot received at {vector}')
@@ -50,19 +66,7 @@ def attack(vector):
             continue
 
 
-@battleship.on()
-def win():
-    print('Yay! You won!')
-    exit(0)
-
-
-@battleship.on()
-def lose():
-    print('Aww... You lost...')
-    exit(0)
-
-
-print('Waiting for the game to start.')
+print('Waiting for the game to start...')
 battleship.join()
-while True:
+while playing.is_set():
     time.sleep(1.0)
