@@ -25,6 +25,9 @@ class Battleship(BattleshipsServicer):
         :param db: Database to use within Redis instance
         :raise ConnectionError: if connection to Redis fails
         """
+        logger.info('Starting Battleship. Connect to Redis '
+                    f'at {redis_host}:{redis_port}.')
+
         self.__r = redis.Redis(host=redis_host, port=redis_port, db=db)
         if not self.ping_redis():
             raise ConnectionError('Unable to connect to Redis server!')
