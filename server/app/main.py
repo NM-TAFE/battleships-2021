@@ -1,11 +1,13 @@
 import grpc
-import log
+import logging
 import os
 from battleships_pb2_grpc import add_BattleshipsServicer_to_server
 from concurrent.futures import ThreadPoolExecutor
 from server import Battleship
+import log
 
 logger = log.get_logger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def main():
