@@ -1,7 +1,11 @@
+import os
 import time
 from client import Battleship
 
-battleship = Battleship()
+grpc_host = os.getenv('GRPC_HOST', 'localhost')
+grpc_port = os.getenv('GRPC_PORT', '50051')
+
+battleship = Battleship(grpc_host=grpc_host, grpc_port=grpc_port)
 
 
 @battleship.on()
