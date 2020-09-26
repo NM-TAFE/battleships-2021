@@ -20,7 +20,7 @@ class Battleship:
         Response.State.LOSE: 'lose',
     }
 
-    # The gRPC states mapped onto handler method names
+    # The gRPC report states mapped onto handler method names
     STATES = {
         Status.State.MISS: 'miss',
         Status.State.HIT: 'hit',
