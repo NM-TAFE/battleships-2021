@@ -209,14 +209,8 @@ class _Server:
         :param player_id: Player this game server is handling
         :return: Thread handling the gRPC requests
         """
-
-        def get_grpc_handler():
-            def handle_grpc():
-                return self.handle_grpc(game, player_id)
-
-            return handle_grpc
-
-        game_thread = threading.Thread(target=get_grpc_handler())
+        game_thread = threading.Thread(
+            target=lambda: self.handle_grpc(game, player_id))
         game_thread.daemon = True
         game_thread.start()
         return game_thread
