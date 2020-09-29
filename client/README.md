@@ -1,7 +1,7 @@
 # Battleships client
 
 This is a simple reference implementation showing how to use the client to play Battleships against the gRPC
-powered game server. 
+powered game server. (Well, you're actually playing against another player.)
 
 ### Using the Battleship client in an actual implementation
 
