@@ -136,6 +136,9 @@ def attack(vector):
 ```
 
 In order to play the game, the client must first "join" a game (or start a new game if no open game is available).
+The game has really started when the `begin` event is raised, after which either `start_turn` or `end_turn` will
+indicate whether or not it's this client's turn. 
+
 Finally, the game should be played as long as the flag `playing` is still set (as an example). The event handlers
 are called from a different thread than the main thread.
 
