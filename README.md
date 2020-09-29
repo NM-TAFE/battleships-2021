@@ -1,8 +1,9 @@
-# battleships
+# Battleships
 
-Game server code for distributed battleships. The client is for reference only.
+Game server code for distributed battleships. The client is for reference only, but it contains all the information, 
+including a lot of comments and explanations, to create a client of your own.
 
-### Create files
+### Create protobuf and gRPC files
 
 From within the `app` directory:
 
