@@ -140,7 +140,7 @@ The other functions that are available are:
 `battleship.defeat()` to indicate this player is defeated (just like in the real board game).
 
 With these functions and the callback functions, you can implement a client of your own, for instance, one that
-keeps track of the moves in a graphical UI.
+keeps track of the moves in a graphical UI, that plays appropriate sounds upon hits and misses, etc.
 
 Please note that the game server does not keep track of the moves and has no knowledge of who wins the game. This
 is up to the clients. 
