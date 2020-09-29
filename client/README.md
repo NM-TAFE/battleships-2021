@@ -58,6 +58,16 @@ def start_turn():
     battleship.attack(s)
 
 
+
+@battleship.on()
+def end_turn():
+    """This callback indicates this client's turn is over. It is not
+    used in this example implementation but is added for the sake of
+    completeness.
+    """
+    pass
+
+
 @battleship.on()
 def hit():
     """This callback indicates that the other player has marked your
@@ -99,6 +109,10 @@ def attack(vector):
     note that the game server does not perform any validation on the
     vector, so it is up to the clients to agree on a certain format (it
     must be a string, though).
+
+    Just like in the example below, you should respond to an attack with
+    either a hit, miss, or a defeat. The latter means that this client's
+    ships all have been sunk and the game is over.
 
     :param vector: a string indicating the square that was attacked
     """
