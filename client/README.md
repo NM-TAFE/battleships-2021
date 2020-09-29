@@ -151,10 +151,10 @@ while playing.is_set():
 
 The other functions that are available are:
 
-`battleship.attack(vector)` to attack the other player's board (with `vector` indicating a square on the board),
-`battleship.hit()`, to indicate the other player hit a square,
-`battleship.miss()` to indicate the other player's attack was a miss, and
-`battleship.defeat()` to indicate this player is defeated (just like in the real board game).
+- `battleship.attack(vector)` to attack the other player's board (with `vector` indicating a square on the board),
+- `battleship.hit()`, to indicate the other player hit a square,
+- `battleship.miss()` to indicate the other player's attack was a miss, and
+- `battleship.defeat()` to indicate this player is defeated (just like in the real board game).
 
 With these functions and the callback functions, you can implement a client of your own, for instance, one that
 keeps track of the moves in a graphical UI, that plays appropriate sounds upon hits and misses, etc.
