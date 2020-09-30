@@ -1,26 +1,26 @@
 # Battleships
 
-Game server code for distributed battleships. The client is for reference only, but it contains all the information, 
-including a lot of comments and explanations, to create a client of your own.
+This repository contains the code for playing a distributed game of Battleships using gRPC. It has a server component
+as wel as a client component. 
 
-### Create protobuf and gRPC files
+### Client 
 
-From within the `app` directory:
+The client contains a class which can be used to build a game client around. The `main.py` file contains a reference
+implementation just to show how that could be done. 
 
-`python -m grpc_tools.protoc -I.\protos --python_out=. --grpc_python_out=. msg.proto`
+### Server 
 
-The created pb2 files are checked in to git. This means that the file should be updated when any of the `protos` files
-are changed. Alternatively, a package could be created that contains only the proto files and the generated pb2 files.
-For now, this is fine, though.
+The server implementation is very loosely based on the Simon game, which can be found here: 
+https://github.com/grpc-ecosystem/grpc-simon-says
 
-### Unit tests
+However, that was written entirely in Go, while this is written in Python. 
 
-The unit tests are best run from within PyCharm. It's straightforward enough to create a new Configuration:
-1) Click on the test folder
-2) Click on Run | Run (Alt-Shift-F10)
-3) Click on 'Unittests in test'
+The game works like this:
+1) A client first joins a game server, which then registers an open game;
+2) A second client joins a game server, which joins an existing open game;
+3) The game servers (one for each client) communicate using Redis (with the Game ID as the unique channel);
+4) Clients play moves (i.e., attack a square) and report states (hit or miss), which are forwarded by the servers;
+5) The game finishes when a client reports a 'defeat' (meaning Game Over).
 
-The configuration can now also be chosen in the dropdown menu in the top right corner where the Run / Debug buttons
-reside.
-
-The unit tests could use some TLC, tbh.
+Clients communicate with game servers using gRPC (a stream-stream connection). They send attacks and reports, and 
+receive the result of their actions (hit/miss) and information about whose turn it is. 
