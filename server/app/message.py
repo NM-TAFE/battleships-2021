@@ -45,7 +45,7 @@ class Message:
         :raise ValueError: if the JSON string cannot be parsed
         """
         d = json.loads(s)
-        if 'type' not in d or 'player' not in d or 'data' not in d:
+        try:
+            return Message(d['type'], d['player'], d['data'])
+        except KeyError:
             raise ValueError()
-
-        return Message(d['type'], d['player'], d['data'])
