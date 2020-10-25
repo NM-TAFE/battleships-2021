@@ -44,10 +44,10 @@ def start_thread(_stream, name):
 
 def test_simple_game_play():
     delay = 0.5
-    
+
     player_1 = 'Alice'
     player_2 = 'Bob'
-    
+
     alice = queue.Queue()
     bob = queue.Queue()
     game_server_1 = Battleship(REDIS_HOST)
