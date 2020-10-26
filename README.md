@@ -1,7 +1,7 @@
 # Battleships
 
 This repository contains the code for playing a distributed game of Battleships using gRPC. It has a server component
-as wel as a client component. 
+as well as a client component. 
 
 ### Client 
 
