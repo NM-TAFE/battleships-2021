@@ -121,18 +121,17 @@ def attack(vector):
     while True:
         print("""H)it, m)iss, or d)efeat? """)
         s = input('Enter status> ')
-        _s = s[0].upper()
-        if _s == 'H':
-            battleship.hit()
-            break
-        elif _s == 'M':
-            battleship.miss()
-            break
-        elif _s == 'D':
-            battleship.defeat()
-            break
-        else:
-            continue
+        if len(s):
+            _s = s[0].upper()
+            if _s == 'H':
+                battleship.hit()
+                break
+            elif _s == 'M':
+                battleship.miss()
+                break
+            elif _s == 'D':
+                battleship.defeat()
+                break
 ```
 
 In order to play the game, the client must first "join" a game (or start a new game if no open game is available).
