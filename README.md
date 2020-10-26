@@ -14,6 +14,8 @@ The server implementation is very loosely based on the Simon game, which can be 
 https://github.com/grpc-ecosystem/grpc-simon-says. However, that was written entirely in Go, while this is written in
 Python. 
 
+### Game play
+
 The game works like this:
 1) A client first joins a game server, which then registers an open game;
 2) A second client joins a game server, which joins an existing open game;
