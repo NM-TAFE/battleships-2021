@@ -119,20 +119,19 @@ def attack(vector):
     vector = vector[0]
     print(f'Shot received at {vector}')
     while True:
-        print("""H)it, m)iss, or d)efeat?""")
+        print("""H)it, m)iss, or d)efeat? """)
         s = input('Enter status> ')
-        _s = s[0].upper()
-        if _s == 'H':
-            battleship.hit()
-            break
-        elif _s == 'M':
-            battleship.miss()
-            break
-        elif _s == 'D':
-            battleship.defeat()
-            break
-        else:
-            continue
+        if len(s):
+            _s = s[0].upper()
+            if _s == 'H':
+                battleship.hit()
+                break
+            elif _s == 'M':
+                battleship.miss()
+                break
+            elif _s == 'D':
+                battleship.defeat()
+                break
 ```
 
 In order to play the game, the client must first "join" a game (or start a new game if no open game is available).
@@ -146,15 +145,16 @@ are called from a different thread than the main thread.
 print('Waiting for the game to start...')
 battleship.join()
 while playing.is_set():
+    # Be nice to the processor
     time.sleep(1.0)
 ```
 
 The other functions that are available are:
 
-- `battleship.attack(vector)` to attack the other player's board (with `vector` indicating a square on the board),
-- `battleship.hit()`, to indicate the other player hit a square,
-- `battleship.miss()` to indicate the other player's attack was a miss, and
-- `battleship.defeat()` to indicate this player is defeated (just like in the real board game).
+- `battleship.attack(vector)`: to attack the other player's board (with `vector` indicating a square on the board),
+- `battleship.hit()`: to indicate the other player hit a ship in the square that was attacked,
+- `battleship.miss()`: to indicate the other player's attack was a miss, and
+- `battleship.defeat()`: to indicate this player is defeated (just like in the real board game when the last ship is sunk).
 
 With these functions and the callback functions, you can implement a client of your own, for instance, one that
 keeps track of the moves in a graphical UI, that plays appropriate sounds upon hits and misses, etc.
