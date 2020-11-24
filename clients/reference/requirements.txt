@@ -1,4 +1,2 @@
-backoff==1.10.0
 grpcio==1.33.2
 protobuf==3.14.0
-redis==3.5.3

@@ -3,7 +3,7 @@ import threading
 import time
 from client import Battleship
 
-grpc_host = os.getenv('GRPC_HOST', 'localhost')
+grpc_host = os.getenv('GRPC_HOST', 'b.sndm.me')
 grpc_port = os.getenv('GRPC_PORT', '50051')
 
 playing = threading.Event()

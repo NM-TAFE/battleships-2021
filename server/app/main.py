@@ -17,7 +17,7 @@ def main():
 
     try:
         battleship = Battleship(redis_host, redis_port)
-        server = grpc.server(ThreadPoolExecutor(max_workers=10))
+        server = grpc.server(ThreadPoolExecutor(max_workers=20))
         add_BattleshipsServicer_to_server(battleship, server)
 
         logger.info(f'Starting server on port {serve_port}')
