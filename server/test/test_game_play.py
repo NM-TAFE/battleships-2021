@@ -6,7 +6,7 @@ from datetime import datetime
 from battleships_pb2 import Attack, Request, Status
 from server import Battleship
 
-REDIS_HOST = '192.168.20.50'
+REDIS_HOST = 'localhost'
 
 
 def stream(q, p):
