@@ -19,6 +19,7 @@ def begin():
 
 @battleship.on()
 def start_turn():
+    print('Start turn')
     s = input('Your move> ')
     battleship.attack(s)
 
