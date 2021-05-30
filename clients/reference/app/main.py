@@ -24,6 +24,11 @@ def start_turn():
 
 
 @battleship.on()
+def end_turn():
+    print('End turn')
+
+
+@battleship.on()
 def hit():
     print('You hit the target!')
 
