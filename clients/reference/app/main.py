@@ -1,7 +1,7 @@
 import os
 import threading
 import time
-from client import Battleship
+from battleship_client import BattleshipClient
 
 grpc_host = os.getenv('GRPC_HOST', 'localhost')
 grpc_port = os.getenv('GRPC_PORT', '50051')
@@ -9,7 +9,7 @@ grpc_port = os.getenv('GRPC_PORT', '50051')
 playing = threading.Event()
 playing.set()
 
-battleship = Battleship(grpc_host=grpc_host, grpc_port=grpc_port)
+battleship = BattleshipClient(grpc_host=grpc_host, grpc_port=grpc_port)
 
 
 @battleship.on()
