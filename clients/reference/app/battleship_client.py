@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class Battleship(ClientInterface):
+class BattleshipClient(ClientInterface):
     # The gRPC turn types mapped onto handler method names
     RESPONSES = {
         Response.State.BEGIN: 'begin',
