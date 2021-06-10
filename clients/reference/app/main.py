@@ -53,7 +53,6 @@ def lose():
 
 @battleship.on()
 def attack(vector):
-    vector = vector[0]
     print(f'Shot received at {vector}')
     while True:
         print("""H)it, m)iss, or d)efeat?""")
