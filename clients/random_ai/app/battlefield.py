@@ -21,7 +21,7 @@ class Battlefield:
         """
         Get the contents of the grid element at (x, y)
         """
-        col, row = self.__from_coords(x, y)
+        col, row = self.from_coords(x, y)
         return self.grid[col][row]
 
     def get_by_col_row(self, col, row):
@@ -35,7 +35,7 @@ class Battlefield:
         Set the contents of the grid element at (x, y)
         to the value {val}.
         """
-        col, row = self.__from_coords(x, y)
+        col, row = self.from_coords(x, y)
         self.grid[col][row] = val
 
     def set_by_col_row(self, col, row, val):
@@ -46,13 +46,13 @@ class Battlefield:
         self.grid[col][row] = val
 
     @staticmethod
-    def __from_coords(x, y):
+    def from_coords(x, y):
         column = ord(x.upper()) - ord('A')
         row = y - 1
         return column, row
 
     @staticmethod
-    def __to_coords(col, row):
+    def to_coords(col, row):
         x = chr(ord('A') + col)
         y = row + 1
         return x, y
@@ -72,7 +72,7 @@ class Battlefield:
         :param horizontal: Orientation of the ship
         :return: True if ship placed succesfully, False otherwise
         """
-        column, row = self.__from_coords(x, y)
+        column, row = self.from_coords(x, y)
         return self.__place_ship(ship_type, column, row, size, horizontal)
 
     def __place_ship(self, ship_type, column, row, size, horizontal):

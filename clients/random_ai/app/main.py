@@ -34,6 +34,8 @@ class Game:
         playing.set()
         self.__playing = playing
 
+        self.__attack_vector = None, None
+
         # Create Battleship Client
         client = BattleshipClient(grpc_host=grpc_host, grpc_port=grpc_port)
 
@@ -72,28 +74,69 @@ class Game:
             time.sleep(1.0)
 
     def begin(self):
-        pass
+        print("The game has started!")
 
     def start_turn(self):
-        pass
+        print("Okay, it's my turn now.")
+        time.sleep(0.25)
+        while True:
+            col = random.randint(0, 9)
+            row = random.randint(0, 9)
+            cell = self.__opponent.get_by_col_row(col, row)
+            if cell is None:
+                self.__attack_vector = col, row
+                x, y = self.__mine.to_coords(col, row)
+                vector = f'{x}{y}'
+                print(f'Attacking on {vector}.')
+                self.__client.attack(vector)
+                break
 
     def end_turn(self):
-        pass
+        print("Okay, my turn has ended.")
 
     def hit(self):
-        pass
+        print("Success!")
+        self.__opponent.set_by_col_row(*self.__attack_vector, 'X')
+        print(self.__opponent)
 
     def miss(self):
-        pass
+        print("No luck.")
+        self.__opponent.set_by_col_row(*self.__attack_vector, '.')
+        print(self.__opponent)
 
     def won(self):
-        pass
+        print("I won!!!")
+        self.__playing.clear()
 
     def lost(self):
-        pass
+        print("Meh. I lost.")
+        self.__playing.clear()
 
     def attacked(self, vector):
-        pass
+        print(f"Oi! Getting attacked on {vector}")
+        x, y = vector[0], int(vector[1])
+        cell = self.__mine.get(x, y)
+        if cell is None:
+            print(self.__mine)
+            self.__client.miss()
+        elif cell == '@':
+            print('THIS SHOULD NOT HAPPEN!')
+            print(self.__mine)
+            self.__client.miss()
+        else:
+            self.__mine.set(x, y, '@')
+
+            print(self.__mine)
+
+            self.__ships[cell] -= 1
+            if self.__ships[cell] == 0:
+                del self.__ships[cell]
+
+            if not self.__ships:
+                self.__client.defeat()
+                self.__playing.clear()
+            else:
+                self.__client.hit()
 
 
 def main():
