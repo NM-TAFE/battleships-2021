@@ -114,7 +114,7 @@ class Game:
 
     def attacked(self, vector):
         print(f"Oi! Getting attacked on {vector}")
-        x, y = vector[0], int(vector[1])
+        x, y = vector[0], int(vector[1:])
         cell = self.__mine.get(x, y)
         if cell is None:
             print(self.__mine)
@@ -124,13 +124,16 @@ class Game:
             print(self.__mine)
             self.__client.miss()
         else:
+            print("I'm hit!")
             self.__mine.set(x, y, '@')
 
-            print(self.__mine)
+            # print(self.__mine)
 
             self.__ships[cell] -= 1
             if self.__ships[cell] == 0:
                 del self.__ships[cell]
+
+            print(self.__ships)
 
             if not self.__ships:
                 self.__client.defeat()
