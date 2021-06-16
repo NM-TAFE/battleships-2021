@@ -23,7 +23,7 @@ class Game:
         'p': 1,
     }
 
-    def __init__(self):
+    def __init__(self, timeout=1.0):
         # Get a copy of the ships
         self.__ships = self.SHIPS.copy()
 
@@ -34,6 +34,7 @@ class Game:
         playing.set()
         self.__playing = playing
 
+        self.__timeout = abs(timeout)
         self.__attack_vector = None, None
 
         # Create Battleship Client
@@ -78,7 +79,7 @@ class Game:
 
     def start_turn(self):
         print("Okay, it's my turn now.")
-        time.sleep(0.25)
+        time.sleep(self.__timeout)
         while True:
             col = random.randint(0, 9)
             row = random.randint(0, 9)
@@ -143,7 +144,7 @@ class Game:
 
 
 def main():
-    game = Game()
+    game = Game(timeout=0.15)
     game.setup()
     game.start()
 
