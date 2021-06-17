@@ -121,7 +121,7 @@ class Game:
             print(self.__mine)
             self.__client.miss()
         elif cell == '@':
-            print('THIS SHOULD NOT HAPPEN!')
+            print('THIS SHOULD NOT HAPPEN!')  # Voiceover: "it happened."
             print(self.__mine)
             self.__client.miss()
         else:
