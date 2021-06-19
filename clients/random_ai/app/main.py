@@ -10,18 +10,16 @@ grpc_port = os.getenv('GRPC_PORT', '50051')
 
 
 class Game:
-    SHIPS = {
-        'A': 5,
-        'B': 4,
-        'S': 3,
-        's': 3,
-        '5': 3,
-        'C': 3,
-        'D': 2,
-        'd': 2,
-        'P': 1,
-        'p': 1,
-    }
+    SHIPS = {'A': 5, 'B': 4, 'S': 3, 's': 3, '5': 3,
+             'C': 3, 'D': 2, 'd': 2, 'P': 1, 'p': 1,
+             }
+
+    SHIP_NAMES = {'A': 'Aircraft Carrier', 'B': 'Battleship',
+                  'S': 'Submarine', 's': 'Submarine', '5': 'Submarine',
+                  'C': 'Cruiser',
+                  'D': 'Destroyer', 'd': 'Destroyer',
+                  'P': 'Patrol Boat', 'p': 'Patrol Boat',
+                  }
 
     def __init__(self, timeout=1.0):
         # Get a copy of the ships
@@ -126,12 +124,14 @@ class Game:
             self.__client.miss()
         else:
             print("I'm hit!")
-            self.__mine.set(x, y, '@')
-
-            # print(self.__mine)
+            self.__mine.set(x, y, 'X')
 
             self.__ships[cell] -= 1
             if self.__ships[cell] == 0:
+                if cell in self.SHIP_NAMES:
+                    sunk_ship = self.SHIP_NAMES[cell]
+                    print(f'Sunk {sunk_ship}!')
+
                 del self.__ships[cell]
 
             print(self.__ships)
