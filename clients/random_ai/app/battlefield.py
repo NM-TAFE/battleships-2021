@@ -89,38 +89,34 @@ class Battlefield:
         :param horizontal: Orientation of the ship
         :return: True if ship placed succesfully, False otherwise
         """
-        if horizontal:
-            max_x = self.STANDARD_X
-            y = row
-            x_start = column
-            for r in range(size):
-                x = r + x_start if r + x_start < max_x else max_x - r - 1
-                if self.grid[x][y] is None:
-                    self.grid[x][y] = ship_type
-                else:
-                    # Backtrack!
-                    for s in range(r):
-                        x = s + x_start if s + x_start < max_x else max_x - s - 1
-                        self.grid[x][y] = None
+        rc_max = self.STANDARD_X if horizontal else self.STANDARD_Y
+        rc, rc_start = (row, column) if horizontal else (column, row)
 
-                    return False
+        # Make sure ship fits on board by tweaking starting position
+        delta = rc_start + size - rc_max
+        if delta > 0:
+            rc_start -= delta
+
+        cells = []
+        for i in range(rc_start, rc_start + size):
+            x, y = (i, rc) if horizontal else (rc, i)
+            if self.grid[x][y] is not None:
+                # Oops, there's already a ship here!
+                break
+
+            # Update grid
+            self.grid[x][y] = ship_type
+            cells.append((x, y))
         else:
-            max_y = self.STANDARD_Y
-            x = column
-            y_start = row
-            for r in range(size):
-                y = r + y_start if r + y_start < max_y else max_y - r - 1
-                if self.grid[x][y] is None:
-                    self.grid[x][y] = ship_type
-                else:
-                    # Backtrack!
-                    for s in range(r):
-                        y = s + y_start if s + y_start < max_y else max_y - s - 1
-                        self.grid[x][y] = None
+            # No ship placed on any of the cells yet
+            return True
 
-                    return False
+        # Ship already exists on one of the cells...
+        for cell in cells:
+            x_, y_ = cell
+            self.grid[x_][y_] = None
 
-        return True
+        return False
 
     def __str__(self):
         s = '     '
