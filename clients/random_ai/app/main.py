@@ -110,13 +110,13 @@ class Game(EasyFrame):
     def hit(self):
         logger.info("Success!")
         self.__opponent.set_by_col_row(*self.__attack_vector, 'X')
-        self.__opponent_ui.update_at(*self.__attack_vector, 'X')
+        self.__opponent_ui.update_at(*self.__attack_vector, '\u2716', colour='red')
 
     def miss(self):
         logger.info("No luck.")
         dot = '\u25CB'
         self.__opponent.set_by_col_row(*self.__attack_vector, dot)
-        self.__opponent_ui.update_at(*self.__attack_vector, dot)
+        self.__opponent_ui.update_at(*self.__attack_vector, dot, colour='grey')
 
     def won(self):
         logger.info("I won!!!")
@@ -137,7 +137,7 @@ class Game(EasyFrame):
             logger.info("I'm hit!")
             self.__mine.set(x, y, 'X')
             col, row = self.__mine.from_coords(x, y)
-            self.__mine_ui.update_at(col, row, 'X')
+            self.__mine_ui.update_at(col, row, '\u2716', colour='red')
 
             self.__ships[cell] -= 1
             if self.__ships[cell] == 0:

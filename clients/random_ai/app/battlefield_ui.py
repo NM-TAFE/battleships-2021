@@ -28,12 +28,12 @@ class BattlefieldUI(EasyCanvas):
                                        font=('Helvetica', 28))
                 self.__cell_data[col][row] = lbl_id
 
-    def update_at(self, col, row, val):
+    def update_at(self, col, row, val, colour='black'):
         """
         Update the text in cell ({col}, {row}) with value {val}.
         """
         lbl_id = self.__cell_data[col][row]
-        self.itemconfig(lbl_id, text=val)
+        self.itemconfig(lbl_id, text=val, fill=colour)
 
 
 def main():
