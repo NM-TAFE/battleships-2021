@@ -32,8 +32,7 @@ class Battlefield:
         """
         Get the contents of the grid element at ({x}, {y})
         """
-        col, row = self.from_coords(x, y)
-        return self.grid[col][row]
+        return self.get_by_col_row(*self.from_coords(x, y))
 
     def get_by_col_row(self, col, row):
         """
@@ -46,8 +45,7 @@ class Battlefield:
         Set the contents of the grid element at ({x}, {y})
         to the value {val}.
         """
-        col, row = self.from_coords(x, y)
-        self.grid[col][row] = val
+        self.set_by_col_row(*self.from_coords(x, y), val)
 
     def set_by_col_row(self, col, row, val):
         """
