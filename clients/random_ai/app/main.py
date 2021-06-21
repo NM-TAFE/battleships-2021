@@ -7,6 +7,9 @@ from battlefield import Battlefield
 from battlefield_ui import BattlefieldUI
 from battleship_client import BattleshipClient
 
+# Without this, nothing shows up...
+logging.basicConfig()
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
