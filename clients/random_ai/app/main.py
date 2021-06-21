@@ -7,8 +7,6 @@ from battlefield import Battlefield
 from battlefield_ui import BattlefieldUI
 from battleship_client import BattleshipClient
 
-logging.getLogger().setLevel(logging.INFO)
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
