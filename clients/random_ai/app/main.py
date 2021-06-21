@@ -38,15 +38,18 @@ class Game(EasyFrame):
         self.__mine = Battlefield(colour=193)
         self.__opponent = Battlefield(colour=208)
 
-        my_row = 0 if not mirrored else 1
-        opponent_row = 1 if not mirrored else 0
-
         self.__mine_ui = BattlefieldUI(self, width=400, height=400, size=10)
-        self.addCanvas(self.__mine_ui, row=my_row)
-
         self.__opponent_ui = BattlefieldUI(self, width=400, height=400, size=10,
                                            colour='lightgreen')
-        self.addCanvas(self.__opponent_ui, row=opponent_row)
+
+        if not mirrored:
+            # Top fields is opponent's
+            self.addCanvas(self.__opponent_ui, row=0)
+            self.addCanvas(self.__mine_ui, row=1)
+        else:
+            # Top field is mine
+            self.addCanvas(self.__mine_ui, row=0)
+            self.addCanvas(self.__opponent_ui, row=1)
 
         self.__timeout = abs(timeout)
         self.__attack_vector = None, None
