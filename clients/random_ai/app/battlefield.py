@@ -89,6 +89,7 @@ class Battlefield:
         :param horizontal: Orientation of the ship
         :return: True if ship placed succesfully, False otherwise
         """
+        # Determine max value for row/column and starting row/column
         rc_max = self.STANDARD_X if horizontal else self.STANDARD_Y
         rc, rc_start = (row, column) if horizontal else (column, row)
 
@@ -97,6 +98,7 @@ class Battlefield:
         if delta > 0:
             rc_start -= delta
 
+        # Place ships making sure no two ships occupy same cell
         cells = []
         for i in range(rc_start, rc_start + size):
             x, y = (i, rc) if horizontal else (rc, i)
@@ -108,15 +110,15 @@ class Battlefield:
             self.grid[x][y] = ship_type
             cells.append((x, y))
         else:
-            # No ship placed on any of the cells yet
-            return True
+            # No ship had been placed on any of the cells yet
+            return cells
 
         # Ship already exists on one of the cells...
         for cell in cells:
             x_, y_ = cell
             self.grid[x_][y_] = None
 
-        return False
+        return None
 
     def __str__(self):
         s = '     '

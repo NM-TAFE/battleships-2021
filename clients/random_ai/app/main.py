@@ -1,9 +1,17 @@
+from datetime import datetime
+import logging
 import os
 import random
-import threading
 import time
+from breezypythongui import EasyFrame
 from battlefield import Battlefield
+from battlefield_ui import BattlefieldUI
 from battleship_client import BattleshipClient
+
+logging.getLogger().setLevel(logging.INFO)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 grpc_host = os.getenv('GRPC_HOST', 'localhost')
 grpc_port = os.getenv('GRPC_PORT', '50051')
@@ -28,9 +36,14 @@ class Game:
         self.__mine = Battlefield(colour=193)
         self.__opponent = Battlefield(colour=208)
 
-        playing = threading.Event()
-        playing.set()
-        self.__playing = playing
+        self.__frame = EasyFrame('Battleships')
+
+        self.__mine_ui = BattlefieldUI(self.__frame, width=400, height=400, size=10)
+        self.__frame.addCanvas(self.__mine_ui, row=0, column=0)
+
+        self.__opponent_ui = BattlefieldUI(self.__frame, width=400, height=400, size=10,
+                                           colour='lightgreen')
+        self.__frame.addCanvas(self.__opponent_ui, row=0, column=1)
 
         self.__timeout = abs(timeout)
         self.__attack_vector = None, None
@@ -50,6 +63,8 @@ class Game:
 
         self.__client = client
 
+        self.join()
+
     def setup(self):
         """
         Randomly place ships on the grid.
@@ -60,23 +75,29 @@ class Game:
                 x = random.choice('ABCDEFGHIJ')
                 y = random.randint(1, 10)
                 o = random.choice([False, True])
-                if self.__mine.place_ship(ship, x, y, size, horizontal=o) is True:
+                result = self.__mine.place_ship(ship, x, y, size, horizontal=o)
+                if result is not None:
+                    for x, y in result:
+                        self.__mine_ui.update_at(x, y, ship)
                     break
 
-        print(self.__mine)
-        print(self.__opponent)
+        logger.info(self.__mine)
+        logger.info(self.__opponent)
 
-    def start(self):
+    def join(self):
         print('Waiting for the game to start...')
         self.__client.join()
-        while self.__playing.is_set():
-            time.sleep(1.0)
+
+    def start(self):
+        self.__frame.mainloop()
+        while True:
+            time.sleep(1)
 
     def begin(self):
-        print("The game has started!")
+        logger.info("The game has started!")
 
     def start_turn(self):
-        print("Okay, it's my turn now.")
+        logger.info("Okay, it's my turn now.")
         time.sleep(self.__timeout)
         while True:
             col = random.randint(0, 9)
@@ -86,67 +107,72 @@ class Game:
                 self.__attack_vector = col, row
                 x, y = self.__mine.to_coords(col, row)
                 vector = f'{x}{y}'
-                print(f'Attacking on {vector}.')
+                logger.info(f'Attacking on {vector}.')
                 self.__client.attack(vector)
                 break
 
     def end_turn(self):
-        print("Okay, my turn has ended.")
+        logger.info("Okay, my turn has ended.")
 
     def hit(self):
-        print("Success!")
+        logger.info("Success!")
         self.__opponent.set_by_col_row(*self.__attack_vector, 'X')
+        self.__opponent_ui.update_at(*self.__attack_vector, 'X')
+        print('Their board:')
         print(self.__opponent)
 
     def miss(self):
-        print("No luck.")
+        logger.info("No luck.")
         self.__opponent.set_by_col_row(*self.__attack_vector, '.')
+        self.__opponent_ui.update_at(*self.__attack_vector, '.')
+        print('Their board:')
         print(self.__opponent)
 
     def won(self):
-        print("I won!!!")
-        self.__playing.clear()
+        logger.info("I won!!!")
 
     def lost(self):
-        print("Meh. I lost.")
-        self.__playing.clear()
+        logger.info("Meh. I lost.")
 
     def attacked(self, vector):
-        print(f"Oi! Getting attacked on {vector}")
+        logger.info(f"Oi! Getting attacked on {vector}")
         x, y = vector[0], int(vector[1:])
         cell = self.__mine.get(x, y)
         if cell is None:
-            print(self.__mine)
             self.__client.miss()
         elif cell == '@':
-            print('THIS SHOULD NOT HAPPEN!')  # Voiceover: "it happened."
-            print(self.__mine)
+            logger.info('THIS SHOULD NOT HAPPEN!')  # Voiceover: "it happened."
             self.__client.miss()
         else:
-            print("I'm hit!")
+            logger.info("I'm hit!")
             self.__mine.set(x, y, 'X')
+            col, row = self.__mine.from_coords(x, y)
+            self.__mine_ui.update_at(col, row, 'X')
 
             self.__ships[cell] -= 1
             if self.__ships[cell] == 0:
                 if cell in self.SHIP_NAMES:
                     sunk_ship = self.SHIP_NAMES[cell]
-                    print(f'Sunk {sunk_ship}!')
+                    logger.info(f'Sunk {sunk_ship}!')
 
                 del self.__ships[cell]
 
-            print(self.__ships)
-
             if not self.__ships:
                 self.__client.defeat()
-                self.__playing.clear()
             else:
                 self.__client.hit()
 
+        logger.info('My board:')
+        logger.info(self.__mine)
+
 
 def main():
-    game = Game(timeout=0.15)
+    start = datetime.now()
+    game = Game(timeout=0.0)
     game.setup()
     game.start()
+    elapsed = round((datetime.now() - start).total_seconds())
+    logger.info(f'Time take for game: {elapsed} seconds.')
 
 
 if __name__ == '__main__':
