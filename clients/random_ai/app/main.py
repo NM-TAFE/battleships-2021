@@ -38,20 +38,26 @@ class Game(EasyFrame):
         self.__mine = Battlefield(colour=193)
         self.__opponent = Battlefield(colour=208)
 
-        my_col = 0 if not mirrored else 1
-        opponent_col = 1 if not mirrored else 0
+        my_row = 0 if not mirrored else 1
+        opponent_row = 1 if not mirrored else 0
 
         self.__mine_ui = BattlefieldUI(self, width=400, height=400, size=10)
-        self.addCanvas(self.__mine_ui, row=0, column=my_col)
+        self.addCanvas(self.__mine_ui, row=my_row)
 
         self.__opponent_ui = BattlefieldUI(self, width=400, height=400, size=10,
                                            colour='lightgreen')
-        self.addCanvas(self.__opponent_ui, row=0, column=opponent_col)
+        self.addCanvas(self.__opponent_ui, row=opponent_row)
 
         self.__timeout = abs(timeout)
         self.__attack_vector = None, None
 
-        # Create Battleship Client
+        self.__client = self.__create_grpc_client()
+        self.__client.join()
+
+    def __create_grpc_client(self):
+        """
+        Create BattleshipClient that communicates with Game Server.
+        """
         client = BattleshipClient(grpc_host=grpc_host, grpc_port=grpc_port)
 
         # Assign event handlers
@@ -63,10 +69,17 @@ class Game(EasyFrame):
         client.add_event_listener('win', self.won)
         client.add_event_listener('lose', self.lost)
         client.add_event_listener('attack', self.attacked)
+        return client
 
-        self.__client = client
+    def clear(self):
+        """
+        Clear all data related to the game so we can start a new game.
+        """
+        self.__mine.clear()
+        self.__mine_ui.clear()
 
-        client.join()
+        self.__opponent.clear()
+        self.__opponent_ui.clear()
 
     def setup(self):
         """

@@ -11,15 +11,26 @@ class Battlefield:
     STANDARD_Y = 10
 
     def __init__(self, columns=STANDARD_X, rows=STANDARD_Y, colour=193):
+        self.__columns = columns
+        self.__rows = rows
+
         # Colour that the grid will be printed in
         self.__colour = colour
 
         # Initialize grid
         self.grid = [[None] * columns for _ in range(rows)]
 
+    def clear(self):
+        """
+        Clear the data of the battlefield.
+        """
+        for col in range(self.__columns):
+            for row in range(self.__rows):
+                self.grid[col][row] = None
+
     def get(self, x, y):
         """
-        Get the contents of the grid element at (x, y)
+        Get the contents of the grid element at ({x}, {y})
         """
         col, row = self.from_coords(x, y)
         return self.grid[col][row]
@@ -32,7 +43,7 @@ class Battlefield:
 
     def set(self, x, y, val):
         """
-        Set the contents of the grid element at (x, y)
+        Set the contents of the grid element at ({x}, {y})
         to the value {val}.
         """
         col, row = self.from_coords(x, y)
@@ -127,7 +138,10 @@ class Battlefield:
         s += '+---' * self.STANDARD_X + '+\n'
         for y in range(self.STANDARD_Y):
             s += f'{y + 1:2} |'
-            s += '|'.join(['   ' if self.grid[x][y] is None else f' {self.grid[x][y][0]} ' for x in range(self.STANDARD_X)])
+            s += '|'.join(['   '
+                           if self.grid[x][y] is None
+                           else f' {self.grid[x][y][0]} '
+                           for x in range(self.STANDARD_X)])
             s += '|\n'
             s += '   '
             s += '+---' * self.STANDARD_X + '+\n'
@@ -157,7 +171,7 @@ def main():
             x = random.choice('ABCDEFGHIJ')
             y = random.randint(1, 10)
             o = random.choice([False, True])
-            if bf.place_ship(ship, x, y, size, horizontal=o) is True:
+            if bf.place_ship(ship, x, y, size, horizontal=o) is not None:
                 break
 
     print(bf)
@@ -169,14 +183,14 @@ def main():
 def test():
     bf = Battlefield(colour=208)
 
-    assert bf.place_ship('A', 'C', 4, size=5, horizontal=True) is True
-    assert bf.place_ship('D', 'E', 3, size=4, horizontal=False) is False
-    assert bf.place_ship('D', 'E', 5, size=4, horizontal=False) is True
-    assert bf.place_ship('d', 'I', 9, size=4, horizontal=True) is True
-    assert bf.place_ship('S', 'E', 6, size=3, horizontal=True) is False
-    assert bf.place_ship('S', 'B', 6, size=3, horizontal=True) is True
-    assert bf.place_ship('s', 'I', 1, size=3, horizontal=True) is True
-    assert bf.place_ship('B', 'C', 7, size=4, horizontal=False) is True
+    assert bf.place_ship('A', 'C', 4, size=5, horizontal=True) is not None
+    assert bf.place_ship('D', 'E', 3, size=4, horizontal=False) is None
+    assert bf.place_ship('D', 'E', 5, size=4, horizontal=False) is not None
+    assert bf.place_ship('d', 'I', 9, size=4, horizontal=True) is not None
+    assert bf.place_ship('S', 'E', 6, size=3, horizontal=True) is None
+    assert bf.place_ship('S', 'B', 6, size=3, horizontal=True) is not None
+    assert bf.place_ship('s', 'I', 1, size=3, horizontal=True) is not None
+    assert bf.place_ship('B', 'C', 7, size=4, horizontal=False) is not None
 
     print('Test grid: \n')
     print(bf)
