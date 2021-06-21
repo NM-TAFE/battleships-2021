@@ -45,8 +45,6 @@ class BattleshipClient(ClientInterface):
         self.__channel = grpc.insecure_channel(f'{self.__host}:{self.__port}')
         self.__stub = BattleshipsStub(self.__channel)
 
-        self.__response_thread = None
-
     def __del__(self):
         if self.__channel is not None:
             self.__channel.close()
