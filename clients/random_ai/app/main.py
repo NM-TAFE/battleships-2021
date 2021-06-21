@@ -1,4 +1,3 @@
-from datetime import datetime
 import logging
 import os
 import random
@@ -17,7 +16,7 @@ grpc_host = os.getenv('GRPC_HOST', 'localhost')
 grpc_port = os.getenv('GRPC_PORT', '50051')
 
 
-class Game:
+class Game(EasyFrame):
     SHIPS = {'A': 5, 'B': 4, 'S': 3, 's': 3, '5': 3,
              'C': 3, 'D': 2, 'd': 2, 'P': 1, 'p': 1,
              }
@@ -29,21 +28,24 @@ class Game:
                   'P': 'Patrol Boat', 'p': 'Patrol Boat',
                   }
 
-    def __init__(self, timeout=1.0):
+    def __init__(self, timeout=1.0, mirrored=False):
+        EasyFrame.__init__(self, 'Battleships')
+
         # Get a copy of the ships
         self.__ships = self.SHIPS.copy()
 
         self.__mine = Battlefield(colour=193)
         self.__opponent = Battlefield(colour=208)
 
-        self.__frame = EasyFrame('Battleships')
+        my_col = 0 if not mirrored else 1
+        opponent_col = 1 if not mirrored else 0
 
-        self.__mine_ui = BattlefieldUI(self.__frame, width=400, height=400, size=10)
-        self.__frame.addCanvas(self.__mine_ui, row=0, column=0)
+        self.__mine_ui = BattlefieldUI(self, width=400, height=400, size=10)
+        self.addCanvas(self.__mine_ui, row=0, column=my_col)
 
-        self.__opponent_ui = BattlefieldUI(self.__frame, width=400, height=400, size=10,
+        self.__opponent_ui = BattlefieldUI(self, width=400, height=400, size=10,
                                            colour='lightgreen')
-        self.__frame.addCanvas(self.__opponent_ui, row=0, column=1)
+        self.addCanvas(self.__opponent_ui, row=0, column=opponent_col)
 
         self.__timeout = abs(timeout)
         self.__attack_vector = None, None
@@ -63,7 +65,7 @@ class Game:
 
         self.__client = client
 
-        self.join()
+        client.join()
 
     def setup(self):
         """
@@ -81,17 +83,8 @@ class Game:
                         self.__mine_ui.update_at(x, y, ship)
                     break
 
-        logger.info(self.__mine)
-        logger.info(self.__opponent)
-
-    def join(self):
-        print('Waiting for the game to start...')
-        self.__client.join()
-
     def start(self):
-        self.__frame.mainloop()
-        while True:
-            time.sleep(1)
+        self.mainloop()
 
     def begin(self):
         logger.info("The game has started!")
@@ -118,15 +111,12 @@ class Game:
         logger.info("Success!")
         self.__opponent.set_by_col_row(*self.__attack_vector, 'X')
         self.__opponent_ui.update_at(*self.__attack_vector, 'X')
-        print('Their board:')
-        print(self.__opponent)
 
     def miss(self):
         logger.info("No luck.")
-        self.__opponent.set_by_col_row(*self.__attack_vector, '.')
-        self.__opponent_ui.update_at(*self.__attack_vector, '.')
-        print('Their board:')
-        print(self.__opponent)
+        dot = '\u25CB'
+        self.__opponent.set_by_col_row(*self.__attack_vector, dot)
+        self.__opponent_ui.update_at(*self.__attack_vector, dot)
 
     def won(self):
         logger.info("I won!!!")
@@ -162,17 +152,13 @@ class Game:
             else:
                 self.__client.hit()
 
-        logger.info('My board:')
-        logger.info(self.__mine)
-
 
 def main():
-    start = datetime.now()
-    game = Game(timeout=0.0)
+    mirrored = os.getenv('MIRRORED', False)
+
+    game = Game(timeout=0.0, mirrored=mirrored)
     game.setup()
     game.start()
-    elapsed = round((datetime.now() - start).total_seconds())
-    logger.info(f'Time take for game: {elapsed} seconds.')
 
 
 if __name__ == '__main__':
