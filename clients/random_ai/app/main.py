@@ -29,7 +29,7 @@ class Game(EasyFrame):
                   'P': 'Patrol Boat', 'p': 'Patrol Boat',
                   }
 
-    def __init__(self, timeout=1.0, mirrored=False):
+    def __init__(self, timeout=1.0, mirrored=False, vertical=False):
         EasyFrame.__init__(self, 'Battleships')
 
         # Get a copy of the ships
@@ -42,14 +42,20 @@ class Game(EasyFrame):
         self.__opponent_ui = BattlefieldUI(self, width=400, height=400, size=10,
                                            colour='lightgreen')
 
+        fields = []
         if not mirrored:
-            # Top fields is opponent's
-            self.addCanvas(self.__opponent_ui, row=0)
-            self.addCanvas(self.__mine_ui, row=1)
+            fields.append(self.__opponent_ui)
+            fields.append(self.__mine_ui)
         else:
-            # Top field is mine
-            self.addCanvas(self.__mine_ui, row=0)
-            self.addCanvas(self.__opponent_ui, row=1)
+            fields.append(self.__opponent_ui)
+            fields.append(self.__mine_ui)
+
+        for i in range(len(fields)):
+            field = fields[i]
+            if vertical:
+                self.addCanvas(field, row=i)
+            else:
+                self.addCanvas(field, column=i)
 
         self.__timeout = abs(timeout)
         self.__attack_vector = None, None
@@ -172,8 +178,9 @@ class Game(EasyFrame):
 
 def main():
     mirrored = os.getenv('MIRRORED', False)
+    vertical = os.getenv('VERTICAL', False)
 
-    game = Game(timeout=0.0, mirrored=mirrored)
+    game = Game(timeout=0.5, mirrored=mirrored, vertical=vertical)
     game.setup()
     game.start()
 
