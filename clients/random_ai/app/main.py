@@ -29,8 +29,10 @@ class Game(EasyFrame):
                   'P': 'Patrol Boat', 'p': 'Patrol Boat',
                   }
 
-    def __init__(self, timeout=1.0, mirrored=False, vertical=False):
+    def __init__(self, timeout=1.0, mirrored=False, vertical=False, smart_ai=False):
         EasyFrame.__init__(self, 'Battleships')
+
+        self.__smart_ai = smart_ai
 
         # Get a copy of the ships
         self.__ships = self.SHIPS.copy()
@@ -71,8 +73,8 @@ class Game(EasyFrame):
 
         # Assign event handlers
         client.add_event_listener('begin', self.begin)
-        client.add_event_listener('start_turn', self.start_turn)
-        client.add_event_listener('end_turn', self.end_turn)
+        client.add_event_listener('start_turn', self.start_my_turn)
+        client.add_event_listener('end_turn', self.end_my_turn)
         client.add_event_listener('hit', self.hit)
         client.add_event_listener('miss', self.miss)
         client.add_event_listener('win', self.won)
@@ -113,22 +115,49 @@ class Game(EasyFrame):
     def begin(self):
         logger.info("The game has started!")
 
-    def start_turn(self):
+    def start_my_turn(self):
         logger.info("Okay, it's my turn now.")
         time.sleep(self.__timeout)
         while True:
-            col = random.randint(0, 9)
-            row = random.randint(0, 9)
-            cell = self.__opponent.get_by_col_row(col, row)
-            if cell is None:
-                self.__attack_vector = col, row
-                x, y = self.__mine.to_coords(col, row)
-                vector = f'{x}{y}'
-                logger.info(f'Attacking on {vector}.')
-                self.__client.attack(vector)
+            try:
+                col, row = self.__get_nearby_cell()
+                self.__attack_cell(col, row)
                 break
+            except ValueError:
+                col = random.randint(0, 9)
+                row = random.randint(0, 9)
 
-    def end_turn(self):
+                cell = self.__opponent.get_by_col_row(col, row)
+                if cell is None:
+                    self.__attack_cell(col, row)
+                    break
+
+    def __attack_cell(self, col, row):
+        self.__attack_vector = col, row
+        x, y = self.__mine.to_coords(col, row)
+        vector = f'{x}{y}'
+        logger.info(f'Attacking on {vector}.')
+        self.__client.attack(vector)
+
+    def __get_nearby_cell(self):
+        col, row = self.__attack_vector
+        if not self.__smart_ai or col is None:
+            raise ValueError
+
+        for dx, dy in [(-1, 0), (0, -1), (1, 0), (0, 1)]:
+            dcol, drow = col + dx, row + dy
+            try:
+                cell = self.__opponent.get_by_col_row(dcol, drow)
+            except IndexError:
+                pass
+            else:
+                if cell is None:
+                    logger.info(f'Nearby cell {col},{row} found.')
+                    return dcol, drow
+        else:
+            raise ValueError
+
+    def end_my_turn(self):
         logger.info("Okay, my turn has ended.")
 
     def hit(self):
@@ -140,7 +169,8 @@ class Game(EasyFrame):
         logger.info("No luck.")
         dot = '\u25CB'
         self.__opponent.set_by_col_row(*self.__attack_vector, dot)
-        self.__opponent_ui.update_at(*self.__attack_vector, dot, colour='grey')
+        self.__opponent_ui.update_at(*self.__attack_vector, dot, colour='blue')
+        self.__attack_vector = None, None
 
     def won(self):
         logger.info("I won!!!")
@@ -180,8 +210,9 @@ class Game(EasyFrame):
 def main():
     mirrored = os.getenv('MIRRORED', False)
     vertical = os.getenv('VERTICAL', False)
+    smart_ai = os.getenv('SMART_AI', False)
 
-    game = Game(timeout=0.5, mirrored=mirrored, vertical=vertical)
+    game = Game(timeout=0.25, mirrored=mirrored, vertical=vertical, smart_ai=smart_ai)
     game.setup()
     game.start()
 
