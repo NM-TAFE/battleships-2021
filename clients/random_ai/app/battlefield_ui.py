@@ -26,8 +26,10 @@ class BattlefieldUI(EasyCanvas):
                 self.__cells[col][row] = rect
 
                 # The text will indicate the cell's status
-                lbl_id = self.drawText('', x+cell_width/2, y+1+cell_width/2,
-                                       font=('Helvetica', 28))
+                lbl = f'{chr(ord("A")+col)}{row+1}'
+                lbl_id = self.drawText(lbl, x+cell_width/2, y+1+cell_width/2,
+                                       font=('Helvetica', 10, 'italic'))
+                self.itemconfig(lbl_id, fill='grey')
                 self.__cell_data[col][row] = lbl_id
 
     def update_at(self, col, row, val, colour='black'):
@@ -35,7 +37,7 @@ class BattlefieldUI(EasyCanvas):
         Update the text in cell ({col}, {row}) with value {val}.
         """
         lbl_id = self.__cell_data[col][row]
-        self.itemconfig(lbl_id, text=val, fill=colour)
+        self.itemconfig(lbl_id, text=val, fill=colour, font=('Helvetica', 28))
 
     def clear(self):
         """
