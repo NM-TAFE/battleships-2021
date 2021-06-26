@@ -206,8 +206,4 @@ class BattleshipClient(ClientInterface):
         """
         cmd = args[0]
         if cmd in self.__handlers:
-            args = args[1:]
-            if not args:
-                self.__handlers[cmd]()
-            else:
-                self.__handlers[cmd](*args)
+            self.__handlers[cmd](*args[1:])
