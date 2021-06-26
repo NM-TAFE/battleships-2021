@@ -47,15 +47,15 @@ class Game(EasyFrame):
             fields.append(self.__opponent_ui)
             fields.append(self.__mine_ui)
         else:
-            fields.append(self.__opponent_ui)
             fields.append(self.__mine_ui)
+            fields.append(self.__opponent_ui)
 
         for i in range(len(fields)):
             field = fields[i]
             if vertical:
-                self.addCanvas(field, row=i)
+                self.addCanvas(field, row=i, column=0)
             else:
-                self.addCanvas(field, column=i)
+                self.addCanvas(field, row=0, column=i)
 
         self.__timeout = abs(timeout)
         self.__attack_vector = None, None
@@ -103,7 +103,8 @@ class Game(EasyFrame):
                 result = self.__mine.place_ship(ship, x, y, size, horizontal=o)
                 if result is not None:
                     for x, y in result:
-                        self.__mine_ui.update_at(x, y, ship)
+                        ship_name = self.SHIP_NAMES[ship][0]
+                        self.__mine_ui.update_at(x, y, ship_name)
                     break
 
     def start(self):
