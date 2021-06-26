@@ -18,16 +18,19 @@ grpc_port = os.getenv('GRPC_PORT', '50051')
 
 
 class Game(EasyFrame):
-    SHIPS = {'A': 5, 'B': 4, 'S': 3, 's': 3, '5': 3,
-             'C': 3, 'D': 2, 'd': 2, 'P': 1, 'p': 1,
-             }
+    SHIPS = {
+        'A': 5, 'B': 4, 'S': 3, 's': 3, '5': 3,
+        'C': 3, 'D': 2, 'd': 2, 'P': 1, 'p': 1,
+    }
 
-    SHIP_NAMES = {'A': 'Aircraft Carrier', 'B': 'Battleship',
-                  'S': 'Submarine', 's': 'Submarine', '5': 'Submarine',
-                  'C': 'Cruiser',
-                  'D': 'Destroyer', 'd': 'Destroyer',
-                  'P': 'Patrol Boat', 'p': 'Patrol Boat',
-                  }
+    SHIP_NAMES = {
+        'A': 'Aircraft Carrier',
+        'B': 'Battleship',
+        'S': 'Submarine', 's': 'Submarine', '5': 'Submarine',
+        'C': 'Cruiser',
+        'D': 'Destroyer', 'd': 'Destroyer',
+        'P': 'Patrol Boat', 'p': 'Patrol Boat',
+    }
 
     def __init__(self, timeout=1.0, mirrored=False, vertical=False, smart_ai=False):
         EasyFrame.__init__(self, 'Battleships')
