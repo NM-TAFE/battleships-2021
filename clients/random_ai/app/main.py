@@ -18,6 +18,7 @@ grpc_port = os.getenv('GRPC_PORT', '50051')
 
 
 class Game(EasyFrame):
+    SIZE = 10
     SHIPS = {
         'A': 5, 'B': 4, 'S': 3, 's': 3, '5': 3,
         'C': 3, 'D': 2, 'd': 2, 'P': 1, 'p': 1,
@@ -43,8 +44,8 @@ class Game(EasyFrame):
         self.__mine = Battlefield(colour=193)
         self.__opponent = Battlefield(colour=208)
 
-        self.__mine_ui = BattlefieldUI(self, width=400, height=400, size=10)
-        self.__opponent_ui = BattlefieldUI(self, width=400, height=400, size=10,
+        self.__mine_ui = BattlefieldUI(self, width=400, height=400, size=self.SIZE)
+        self.__opponent_ui = BattlefieldUI(self, width=400, height=400, size=self.SIZE,
                                            colour='lightgreen')
 
         fields = []
@@ -123,9 +124,8 @@ class Game(EasyFrame):
         time.sleep(self.__timeout)
         while True:
             try:
-                col, row = self.__get_nearby_cell()
-                self.__attack_cell(col, row)
-                break
+                self.__attack_nearby_cell()
+                return
             except ValueError:
                 col = random.randint(0, 9)
                 row = random.randint(0, 9)
@@ -133,32 +133,45 @@ class Game(EasyFrame):
                 cell = self.__opponent.get_by_col_row(col, row)
                 if cell is None:
                     self.__attack_cell(col, row)
-                    break
+                    return
 
     def __attack_cell(self, col, row):
+        """
+        Attack the opponent at location ({col}, {row}).
+        """
         self.__attack_vector = col, row
         x, y = self.__mine.to_coords(col, row)
         vector = f'{x}{y}'
         logger.info(f'Attacking on {vector}.')
         self.__client.attack(vector)
 
-    def __get_nearby_cell(self):
+    def __attack_nearby_cell(self):
+        """
+        This method attacks a nearby cell based on an earlier hit. The
+        position of the hit is maintained in the instance variable
+        {__attack_vector}. The AI will try to find an empty location
+        close to the latest successful attack. If no empty locations
+        exist, it will raise a ValueError.
+        """
         col, row = self.__attack_vector
-        if not self.__smart_ai or col is None:
-            raise ValueError
+        if self.__smart_ai and not (col is None or row is None):
+            relative_cells = [(-1, 0), (0, -1), (1, 0), (0, 1)]
 
-        for dx, dy in [(-1, 0), (0, -1), (1, 0), (0, 1)]:
-            dcol, drow = col + dx, row + dy
-            try:
+            # Shuffling may not make much of a difference...
+            random.shuffle(relative_cells)
+            for dx, dy in relative_cells:
+                dcol, drow = col + dx, row + dy
+                if not (0 <= dcol < self.SIZE and 0 <= drow < self.SIZE):
+                    # Off the grid, so move to the next one
+                    continue
+
                 cell = self.__opponent.get_by_col_row(dcol, drow)
-            except IndexError:
-                pass
-            else:
                 if cell is None:
-                    logger.info(f'Nearby cell {col},{row} found.')
-                    return dcol, drow
-        else:
-            raise ValueError
+                    logger.info(f'Nearby empty cell @ ({col},{row}) found.')
+                    self.__attack_cell(dcol, drow)
+                    return
+
+        raise ValueError
 
     def end_my_turn(self):
         logger.info("Okay, my turn has ended.")
@@ -167,12 +180,15 @@ class Game(EasyFrame):
         logger.info("Success!")
         self.__opponent.set_by_col_row(*self.__attack_vector, 'X')
         self.__opponent_ui.update_at(*self.__attack_vector, '\u2716', colour='red')
+        # Don't reset attack vector so AI will try to attack a nearby position
 
     def miss(self):
         logger.info("No luck.")
         dot = '\u25CB'
         self.__opponent.set_by_col_row(*self.__attack_vector, dot)
         self.__opponent_ui.update_at(*self.__attack_vector, dot, colour='blue')
+
+        # Reset the attack vector so next attack will be at random position
         self.__attack_vector = None, None
 
     def won(self):
