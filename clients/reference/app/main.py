@@ -53,6 +53,8 @@ def lose():
 
 @battleship.on()
 def attack(vector):
+    # Get rid of any whitespace
+    vector = vector.strip()
     print(f'Shot received at {vector}')
     while True:
         print("""H)it, m)iss, or d)efeat?""")
