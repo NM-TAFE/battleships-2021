@@ -198,7 +198,11 @@ class Game(EasyFrame):
         logger.info("Meh. I lost.")
 
     def attacked(self, vector):
+        # Get rid of any whitespace
+        vector = vector.strip()
+
         logger.info(f"Oi! Getting attacked on {vector}")
+        
         x, y = vector[0], int(vector[1:])
         cell = self.__mine.get(x, y)
         if cell is None:
